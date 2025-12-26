@@ -1,0 +1,215 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局样式 */
+* {
+  -webkit-app-region: no-drag;
+}
+
+body {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  background: linear-gradient(135deg, #0a0e14 0%, #0d1117 50%, #161b22 100%);
+  color: #e6edf3;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* 终端字体 */
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+}
+
+/* 可拖拽区域 */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* 自定义滚动条 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* 玻璃态效果 */
+.glass {
+  background: rgba(22, 27, 34, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(48, 54, 61, 0.6);
+}
+
+.glass-hover:hover {
+  background: rgba(30, 36, 44, 0.9);
+  border-color: rgba(88, 166, 255, 0.3);
+}
+
+/* 发光边框 */
+.glow-border {
+  box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.3),
+              0 0 20px rgba(88, 166, 255, 0.1);
+}
+
+.glow-border-active {
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.5),
+              0 0 30px rgba(88, 166, 255, 0.2);
+}
+
+/* 输入框样式 */
+input, textarea {
+  user-select: text;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+}
+
+/* 按钮悬停效果 */
+.btn-glow {
+  transition: all 0.2s ease;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 20px rgba(88, 166, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-glow:active {
+  transform: translateY(0);
+}
+
+/* 卡片悬停效果 */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* 终端样式 */
+.terminal-container {
+  background: #0d1117;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.xterm {
+  padding: 12px;
+}
+
+.xterm-viewport::-webkit-scrollbar {
+  width: 8px;
+}
+
+.xterm-viewport::-webkit-scrollbar-track {
+  background: #161b22;
+}
+
+.xterm-viewport::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+
+/* 动画类 */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(88, 166, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* 脉冲点 */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+/* 状态颜色 */
+.status-online {
+  background: #3fb950;
+  box-shadow: 0 0 8px rgba(63, 185, 80, 0.6);
+}
+
+.status-offline {
+  background: #8b949e;
+}
+
+.status-error {
+  background: #f85149;
+  box-shadow: 0 0 8px rgba(248, 81, 73, 0.6);
+}
+
+/* 渐变背景 */
+.gradient-bg {
+  background: radial-gradient(ellipse at top left, rgba(88, 166, 255, 0.1) 0%, transparent 50%),
+              radial-gradient(ellipse at bottom right, rgba(188, 140, 255, 0.08) 0%, transparent 50%),
+              linear-gradient(135deg, #0a0e14 0%, #0d1117 100%);
+}
+
+/* 标签页效果 */
+.tab-active {
+  background: linear-gradient(180deg, rgba(88, 166, 255, 0.2) 0%, transparent 100%);
+  border-bottom: 2px solid #58a6ff;
+}
+
+/* 命令提示框 */
+.command-hint {
+  background: rgba(22, 27, 34, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(48, 54, 61, 0.8);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* 代码高亮 */
+.code-highlight {
+  color: #58a6ff;
+  background: rgba(88, 166, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
