@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   FiX,
@@ -13,7 +13,7 @@ import {
   FiAlertCircle,
 } from 'react-icons/fi';
 
-function Settings({ onClose, isRemoteConnected, onConnectionChange }) {
+function Settings({ onClose, isRemoteConnected, onConnectionChange, onHostsUpdate }) {
   const [activeTab, setActiveTab] = useState('database');
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -26,6 +26,19 @@ function Settings({ onClose, isRemoteConnected, onConnectionChange }) {
     database: 'easyshell',
   });
 
+  // 加载保存的配置
+  useEffect(() => {
+    const loadConfig = async () => {
+      if (window.electronAPI) {
+        const savedConfig = await window.electronAPI.db.getConfig();
+        if (savedConfig) {
+          setMysqlConfig(savedConfig);
+        }
+      }
+    };
+    loadConfig();
+  }, []);
+
   const handleConnect = async () => {
     if (!window.electronAPI) return;
 
@@ -33,10 +46,20 @@ function Settings({ onClose, isRemoteConnected, onConnectionChange }) {
     setMessage(null);
 
     try {
+      // 保存配置
+      await window.electronAPI.db.saveConfig(mysqlConfig);
+      
       const result = await window.electronAPI.db.connectMySQL(mysqlConfig);
       if (result.success) {
-        setMessage({ type: 'success', text: '数据库连接成功！已自动创建数据库和表结构' });
+        setMessage({ type: 'success', text: '数据库连接成功！正在同步数据...' });
         onConnectionChange(true);
+        
+        // 连接成功后自动同步
+        const syncResult = await window.electronAPI.db.syncFromRemote();
+        if (syncResult.success) {
+          setMessage({ type: 'success', text: `连接成功！已同步 ${syncResult.hosts} 条主机信息` });
+          onHostsUpdate?.(); // 刷新主机列表
+        }
       } else {
         setMessage({ type: 'error', text: `连接失败: ${result.error}` });
         onConnectionChange(false);
@@ -87,8 +110,9 @@ function Settings({ onClose, isRemoteConnected, onConnectionChange }) {
       if (result.success) {
         setMessage({ 
           type: 'success', 
-          text: `同步成功！已下载 ${result.hosts} 条主机信息和 ${result.commands} 条命令` 
+          text: `同步成功！已同步 ${result.hosts} 条主机信息` 
         });
+        onHostsUpdate?.(); // 刷新主机列表
       } else {
         setMessage({ type: 'error', text: `同步失败: ${result.error}` });
       }

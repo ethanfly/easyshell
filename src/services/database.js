@@ -223,7 +223,8 @@ class DatabaseService {
           description TEXT,
           last_connected_at DATETIME,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          UNIQUE KEY uk_host (host)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
       `);
 
@@ -274,7 +275,102 @@ class DatabaseService {
   }
 
   /**
-   * 同步数据到远程
+   * 智能双向同步 - 以 host 为唯一标识，比较 updated_at 取最新记录
+   */
+  async smartSync() {
+    if (!this.isRemoteConnected) {
+      return { success: false, error: '未连接到远程数据库' };
+    }
+
+    try {
+      let uploaded = 0;
+      let downloaded = 0;
+
+      // 获取所有本地主机
+      const localHosts = this.runQuery('SELECT * FROM hosts');
+      // 获取所有远程主机
+      const [remoteHosts] = await this.mysqlConnection.execute('SELECT * FROM hosts');
+
+      // 创建 host 地址到记录的映射
+      const localMap = new Map();
+      for (const h of localHosts) {
+        localMap.set(h.host, h);
+      }
+      
+      const remoteMap = new Map();
+      for (const h of remoteHosts) {
+        remoteMap.set(h.host, h);
+      }
+
+      // 1. 处理本地有的记录
+      for (const local of localHosts) {
+        const remote = remoteMap.get(local.host);
+        
+        if (!remote) {
+          // 远程没有，上传到远程
+          await this.mysqlConnection.execute(`
+            INSERT INTO hosts (name, host, port, username, password, private_key, group_name, color, description, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [local.name, local.host, local.port, local.username, local.password, 
+              local.private_key, local.group_name, local.color, local.description,
+              local.updated_at || new Date().toISOString()]);
+          uploaded++;
+        } else {
+          // 远程有，比较时间
+          const localTime = new Date(local.updated_at || 0).getTime();
+          const remoteTime = new Date(remote.updated_at || 0).getTime();
+          
+          if (localTime > remoteTime) {
+            // 本地更新，上传到远程
+            await this.mysqlConnection.execute(`
+              UPDATE hosts SET name=?, port=?, username=?, password=?, private_key=?, 
+                               group_name=?, color=?, description=?, updated_at=?
+              WHERE host=?
+            `, [local.name, local.port, local.username, local.password, local.private_key,
+                local.group_name, local.color, local.description, local.updated_at, local.host]);
+            uploaded++;
+          } else if (remoteTime > localTime) {
+            // 远程更新，下载到本地
+            this.sqliteDb.run(`
+              UPDATE hosts SET name=?, port=?, username=?, password=?, private_key=?,
+                               group_name=?, color=?, description=?, updated_at=?, is_synced=1
+              WHERE host=?
+            `, [remote.name, remote.port, remote.username, remote.password, remote.private_key,
+                remote.group_name, remote.color, remote.description, 
+                remote.updated_at?.toISOString() || new Date().toISOString(), local.host]);
+            downloaded++;
+          }
+        }
+        
+        // 标记为已同步
+        this.sqliteDb.run('UPDATE hosts SET is_synced = 1 WHERE id = ?', [local.id]);
+      }
+
+      // 2. 处理远程有但本地没有的记录
+      for (const remote of remoteHosts) {
+        if (!localMap.has(remote.host)) {
+          // 本地没有，下载到本地
+          this.sqliteDb.run(`
+            INSERT INTO hosts (name, host, port, username, password, private_key, group_name, color, description, updated_at, is_synced)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+          `, [remote.name, remote.host, remote.port, remote.username, remote.password,
+              remote.private_key, remote.group_name, remote.color, remote.description,
+              remote.updated_at?.toISOString() || new Date().toISOString()]);
+          downloaded++;
+        }
+      }
+
+      this.saveDatabase();
+      console.log(`✅ 智能同步完成: 上传 ${uploaded}, 下载 ${downloaded}`);
+      return { success: true, uploaded, downloaded };
+    } catch (error) {
+      console.error('❌ 智能同步失败:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * 同步数据到远程 - 只上传本地更新的
    */
   async syncToRemote() {
     if (!this.isRemoteConnected) {
@@ -282,38 +378,48 @@ class DatabaseService {
     }
 
     try {
-      // 获取本地未同步的主机
-      const localHosts = this.runQuery('SELECT * FROM hosts WHERE is_synced = 0');
+      // 获取本地所有主机
+      const localHosts = this.runQuery('SELECT * FROM hosts');
+      let synced = 0;
 
       for (const host of localHosts) {
-        await this.mysqlConnection.execute(`
-          INSERT INTO hosts (name, host, port, username, password, private_key, group_name, color, description)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON DUPLICATE KEY UPDATE
-            name = VALUES(name),
-            port = VALUES(port),
-            username = VALUES(username),
-            password = VALUES(password),
-            private_key = VALUES(private_key),
-            group_name = VALUES(group_name),
-            color = VALUES(color),
-            description = VALUES(description)
-        `, [host.name, host.host, host.port, host.username, host.password, host.private_key, host.group_name, host.color, host.description]);
+        // 检查远程是否存在
+        const [existing] = await this.mysqlConnection.execute(
+          'SELECT host, updated_at FROM hosts WHERE host = ?', [host.host]
+        );
+
+        if (existing.length === 0) {
+          // 远程不存在，插入
+          await this.mysqlConnection.execute(`
+            INSERT INTO hosts (name, host, port, username, password, private_key, group_name, color, description, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [host.name, host.host, host.port, host.username, host.password, 
+              host.private_key, host.group_name, host.color, host.description,
+              host.updated_at || new Date().toISOString()]);
+          synced++;
+        } else {
+          // 远程存在，比较时间
+          const localTime = new Date(host.updated_at || 0).getTime();
+          const remoteTime = new Date(existing[0].updated_at || 0).getTime();
+          
+          if (localTime > remoteTime) {
+            // 本地更新，才覆盖远程
+            await this.mysqlConnection.execute(`
+              UPDATE hosts SET name=?, port=?, username=?, password=?, private_key=?, 
+                               group_name=?, color=?, description=?, updated_at=?
+              WHERE host=?
+            `, [host.name, host.port, host.username, host.password, host.private_key,
+                host.group_name, host.color, host.description, host.updated_at, host.host]);
+            synced++;
+          }
+        }
 
         // 标记为已同步
         this.sqliteDb.run('UPDATE hosts SET is_synced = 1 WHERE id = ?', [host.id]);
       }
 
       this.saveDatabase();
-
-      // 记录同步日志
-      this.sqliteDb.run(
-        `INSERT INTO sync_log (sync_type, status, details) VALUES ('upload', 'success', ?)`,
-        [JSON.stringify({ synced_hosts: localHosts.length })]
-      );
-      this.saveDatabase();
-
-      return { success: true, synced: localHosts.length };
+      return { success: true, synced };
     } catch (error) {
       console.error('❌ 同步到远程失败:', error);
       return { success: false, error: error.message };
@@ -321,7 +427,7 @@ class DatabaseService {
   }
 
   /**
-   * 从远程同步数据
+   * 从远程同步数据 - 以 host 为唯一标识，取最新记录
    */
   async syncFromRemote() {
     if (!this.isRemoteConnected) {
@@ -331,34 +437,42 @@ class DatabaseService {
     try {
       // 获取远程主机
       const [remoteHosts] = await this.mysqlConnection.execute('SELECT * FROM hosts');
+      let synced = 0;
 
-      for (const host of remoteHosts) {
-        this.sqliteDb.run(`
-          INSERT OR REPLACE INTO hosts (id, name, host, port, username, password, private_key, group_name, color, description, is_synced)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
-        `, [host.id, host.name, host.host, host.port, host.username, host.password, host.private_key, host.group_name, host.color, host.description]);
-      }
-
-      // 同步命令
-      const [remoteCommands] = await this.mysqlConnection.execute('SELECT * FROM commands');
-
-      for (const cmd of remoteCommands) {
-        this.sqliteDb.run(`
-          INSERT OR REPLACE INTO commands (id, command, description, category, usage_count)
-          VALUES (?, ?, ?, ?, ?)
-        `, [cmd.id, cmd.command, cmd.description, cmd.category, cmd.usage_count]);
+      for (const remote of remoteHosts) {
+        // 检查本地是否存在
+        const local = this.runQuerySingle('SELECT * FROM hosts WHERE host = ?', [remote.host]);
+        
+        if (!local) {
+          // 本地不存在，插入
+          this.sqliteDb.run(`
+            INSERT INTO hosts (name, host, port, username, password, private_key, group_name, color, description, updated_at, is_synced)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
+          `, [remote.name, remote.host, remote.port, remote.username, remote.password,
+              remote.private_key, remote.group_name, remote.color, remote.description,
+              remote.updated_at?.toISOString() || new Date().toISOString()]);
+          synced++;
+        } else {
+          // 本地存在，比较时间
+          const localTime = new Date(local.updated_at || 0).getTime();
+          const remoteTime = new Date(remote.updated_at || 0).getTime();
+          
+          if (remoteTime >= localTime) {
+            // 远程更新或相同，覆盖本地
+            this.sqliteDb.run(`
+              UPDATE hosts SET name=?, port=?, username=?, password=?, private_key=?,
+                               group_name=?, color=?, description=?, updated_at=?, is_synced=1
+              WHERE host=?
+            `, [remote.name, remote.port, remote.username, remote.password, remote.private_key,
+                remote.group_name, remote.color, remote.description, 
+                remote.updated_at?.toISOString() || new Date().toISOString(), remote.host]);
+            synced++;
+          }
+        }
       }
 
       this.saveDatabase();
-
-      // 记录同步日志
-      this.sqliteDb.run(
-        `INSERT INTO sync_log (sync_type, status, details) VALUES ('download', 'success', ?)`,
-        [JSON.stringify({ hosts: remoteHosts.length, commands: remoteCommands.length })]
-      );
-      this.saveDatabase();
-
-      return { success: true, hosts: remoteHosts.length, commands: remoteCommands.length };
+      return { success: true, hosts: synced };
     } catch (error) {
       console.error('❌ 从远程同步失败:', error);
       return { success: false, error: error.message };

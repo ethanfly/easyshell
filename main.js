@@ -3,11 +3,20 @@
  */
 const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
+const Store = require('electron-store');
 const databaseService = require('./src/services/database');
 const sshService = require('./src/services/ssh');
 
 let mainWindow;
 const isDev = process.env.NODE_ENV !== 'production' || !app.isPackaged;
+
+// 配置存储
+const configStore = new Store({
+  name: 'easyshell-config',
+  defaults: {
+    mysqlConfig: null,
+  },
+});
 
 // 活动的SSH连接
 const activeConnections = new Map();
@@ -49,6 +58,21 @@ app.whenReady().then(async () => {
   // 初始化本地数据库 (异步)
   await databaseService.initLocalDatabase();
   
+  // 尝试自动连接 MySQL（如果有保存的配置）
+  const savedConfig = configStore.get('mysqlConfig');
+  if (savedConfig && savedConfig.host) {
+    try {
+      const result = await databaseService.connectMySQL(savedConfig);
+      if (result.success) {
+        console.log('✅ 自动连接 MySQL 成功');
+        // 自动同步
+        await databaseService.syncFromRemote();
+      }
+    } catch (err) {
+      console.log('⚠️ 自动连接 MySQL 失败:', err.message);
+    }
+  }
+  
   createWindow();
 
   app.on('activate', () => {
@@ -58,9 +82,21 @@ app.whenReady().then(async () => {
   });
 });
 
-app.on('window-all-closed', () => {
+app.on('window-all-closed', async () => {
   // 关闭所有SSH连接
   sshService.disconnectAll();
+  
+  // 关闭前自动同步到远程
+  if (databaseService.isRemoteConnected) {
+    try {
+      console.log('📤 正在同步数据到远程...');
+      await databaseService.syncToRemote();
+      console.log('✅ 数据同步完成');
+    } catch (err) {
+      console.error('❌ 关闭前同步失败:', err.message);
+    }
+  }
+  
   // 关闭数据库
   databaseService.close();
   
@@ -93,6 +129,16 @@ ipcMain.handle('window:isMaximized', () => {
 
 // ========== 数据库 IPC ==========
 
+// 配置管理
+ipcMain.handle('db:saveConfig', (event, config) => {
+  configStore.set('mysqlConfig', config);
+  return { success: true };
+});
+
+ipcMain.handle('db:getConfig', () => {
+  return configStore.get('mysqlConfig');
+});
+
 // MySQL连接
 ipcMain.handle('db:connectMySQL', async (event, config) => {
   return await databaseService.connectMySQL(config);
@@ -113,6 +159,10 @@ ipcMain.handle('db:syncToRemote', async () => {
 
 ipcMain.handle('db:syncFromRemote', async () => {
   return await databaseService.syncFromRemote();
+});
+
+ipcMain.handle('db:smartSync', async () => {
+  return await databaseService.smartSync();
 });
 
 // 主机管理

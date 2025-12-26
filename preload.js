@@ -15,11 +15,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // 数据库操作
   db: {
+    saveConfig: (config) => ipcRenderer.invoke('db:saveConfig', config),
+    getConfig: () => ipcRenderer.invoke('db:getConfig'),
     connectMySQL: (config) => ipcRenderer.invoke('db:connectMySQL', config),
     disconnectMySQL: () => ipcRenderer.invoke('db:disconnectMySQL'),
     isRemoteConnected: () => ipcRenderer.invoke('db:isRemoteConnected'),
     syncToRemote: () => ipcRenderer.invoke('db:syncToRemote'),
     syncFromRemote: () => ipcRenderer.invoke('db:syncFromRemote'),
+    smartSync: () => ipcRenderer.invoke('db:smartSync'),
   },
 
   // 主机管理

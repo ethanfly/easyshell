@@ -31,8 +31,12 @@ function App() {
     if (window.electronAPI) {
       const connected = await window.electronAPI.db.isRemoteConnected();
       setIsRemoteConnected(connected);
+      // 如果已连接，刷新主机列表（因为启动时可能已自动同步）
+      if (connected) {
+        loadHosts();
+      }
     }
-  }, []);
+  }, [loadHosts]);
 
   useEffect(() => {
     loadHosts();
@@ -254,6 +258,7 @@ function App() {
               setIsRemoteConnected(connected);
               if (connected) loadHosts();
             }}
+            onHostsUpdate={loadHosts}
           />
         )}
       </AnimatePresence>
