@@ -127,7 +127,7 @@ class SFTPService {
         sftp.fastGet(remotePath, localPath, {
           concurrency: 1,  // 单线程下载，更稳定
           chunkSize: 32768, // 32KB 块大小
-          step: function(transferred, chunk, total) {
+          step: function (transferred, chunk, total) {
             const percent = Math.round((transferred / total) * 100);
             if (self.progressCallback) {
               self.progressCallback({
@@ -175,7 +175,7 @@ class SFTPService {
         sftp.fastPut(localPath, remotePath, {
           concurrency: 1,  // 单线程上传，更稳定
           chunkSize: 32768, // 32KB 块大小
-          step: function(transferred, chunk, total) {
+          step: function (transferred, chunk, total) {
             const percent = Math.round((transferred / total) * 100);
             if (self.progressCallback) {
               self.progressCallback({
