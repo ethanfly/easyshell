@@ -177,7 +177,7 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
         let message = `导入完成：新增 ${result.imported} 个`;
         if (result.updated > 0) message += `，更新 ${result.updated} 个`;
         if (result.skipped > 0) message += `，跳过 ${result.skipped} 个`;
-        
+
         setImportExportResult({
           type: 'success',
           message
@@ -289,20 +289,19 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
             </button>
           </div>
         </div>
-        
+
         {/* 导入导出结果提示 */}
         {importExportResult && (
-          <div className={`mx-6 mt-4 p-3 rounded-lg border ${
-            importExportResult.type === 'success'
-              ? 'bg-shell-success/10 border-shell-success/30 text-shell-success'
-              : 'bg-shell-error/10 border-shell-error/30 text-shell-error'
-          }`}>
+          <div className={`mx-6 mt-4 p-3 rounded-lg border ${importExportResult.type === 'success'
+            ? 'bg-shell-success/10 border-shell-success/30 text-shell-success'
+            : 'bg-shell-error/10 border-shell-error/30 text-shell-error'
+            }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {importExportResult.type === 'success' ? <FiCheck size={16} /> : <FiX size={16} />}
                 <span className="text-sm">{importExportResult.message}</span>
               </div>
-              <button 
+              <button
                 onClick={() => setImportExportResult(null)}
                 className="p-1 hover:opacity-70 transition-opacity"
               >
@@ -342,8 +341,8 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
                       setTestResult(null);
                     }}
                     className={`group p-3 rounded-lg border transition-all cursor-pointer
-                      ${isSelected 
-                        ? 'bg-shell-accent/10 border-shell-accent/50' 
+                      ${isSelected
+                        ? 'bg-shell-accent/10 border-shell-accent/50'
                         : 'bg-shell-card/50 border-shell-border hover:border-shell-accent/30 hover:bg-shell-card'
                       }`}
                   >
@@ -547,11 +546,10 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
                         key={color}
                         type="button"
                         onClick={() => setFormData({ ...formData, color })}
-                        className={`w-8 h-8 rounded-lg transition-all ${
-                          formData.color === color 
-                            ? 'ring-2 ring-offset-2 ring-offset-shell-surface ring-white/50 scale-110' 
-                            : 'hover:scale-105'
-                        }`}
+                        className={`w-8 h-8 rounded-lg transition-all ${formData.color === color
+                          ? 'ring-2 ring-offset-2 ring-offset-shell-surface ring-white/50 scale-110'
+                          : 'hover:scale-105'
+                          }`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
@@ -577,11 +575,10 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
                 {/* 测试结果 */}
                 {testResult && (
                   <div
-                    className={`p-4 rounded-lg border ${
-                      testResult.success
-                        ? 'bg-shell-success/10 border-shell-success/30 text-shell-success'
-                        : 'bg-shell-error/10 border-shell-error/30 text-shell-error'
-                    }`}
+                    className={`p-4 rounded-lg border ${testResult.success
+                      ? 'bg-shell-success/10 border-shell-success/30 text-shell-success'
+                      : 'bg-shell-error/10 border-shell-error/30 text-shell-error'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       {testResult.success ? <FiCheck size={18} /> : <FiX size={18} />}

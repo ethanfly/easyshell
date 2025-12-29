@@ -18,6 +18,7 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
   const initTimerRef = useRef(null);
   const hasConnectedRef = useRef(false);
   const resizeObserverRef = useRef(null);
+  const contextMenuHandlerRef = useRef(null);
   
   const onConnectionChangeRef = useRef(onConnectionChange);
   onConnectionChangeRef.current = onConnectionChange;
@@ -203,6 +204,30 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
           window.electronAPI.ssh.write(connectionIdRef.current, data);
         }
       });
+
+      // 选中自动复制到剪贴板
+      term.onSelectionChange(() => {
+        const selection = term.getSelection();
+        if (selection && selection.length > 0) {
+          navigator.clipboard.writeText(selection).catch(err => {
+            console.error('复制到剪贴板失败:', err);
+          });
+        }
+      });
+
+      // 右键粘贴
+      contextMenuHandlerRef.current = async (e) => {
+        e.preventDefault();
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text && connectionIdRef.current && window.electronAPI) {
+            window.electronAPI.ssh.write(connectionIdRef.current, text);
+          }
+        } catch (err) {
+          console.error('从剪贴板粘贴失败:', err);
+        }
+      };
+      container.addEventListener('contextmenu', contextMenuHandlerRef.current);
       
       resizeObserverRef.current = new ResizeObserver(() => {
         fitTerminal();
@@ -246,6 +271,12 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
         resizeObserverRef.current = null;
+      }
+      
+      // 清理右键菜单事件监听器
+      if (contextMenuHandlerRef.current && terminalRef.current) {
+        terminalRef.current.removeEventListener('contextmenu', contextMenuHandlerRef.current);
+        contextMenuHandlerRef.current = null;
       }
       
       if (cleanupListenersRef.current) {
