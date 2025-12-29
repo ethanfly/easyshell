@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     add: (host) => ipcRenderer.invoke('hosts:add', host),
     update: (id, host) => ipcRenderer.invoke('hosts:update', { id, host }),
     delete: (id) => ipcRenderer.invoke('hosts:delete', id),
+    export: () => ipcRenderer.invoke('hosts:export'),
+    import: (mode) => ipcRenderer.invoke('hosts:import', mode),
   },
 
   // 命令

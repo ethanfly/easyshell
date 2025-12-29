@@ -1,8 +1,9 @@
 /**
  * EasyShell - Electron 主进程
  */
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const Store = require('electron-store');
 const databaseService = require('./src/services/database');
 const sshService = require('./src/services/ssh');
@@ -185,6 +186,63 @@ ipcMain.handle('hosts:update', (event, { id, host }) => {
 
 ipcMain.handle('hosts:delete', async (event, id) => {
   return await databaseService.deleteHost(id);
+});
+
+// 导出主机
+ipcMain.handle('hosts:export', async () => {
+  try {
+    const data = databaseService.exportHosts();
+    
+    // 打开保存对话框
+    const { filePath, canceled } = await dialog.showSaveDialog(mainWindow, {
+      title: '导出主机配置',
+      defaultPath: `easyshell-hosts-${new Date().toISOString().slice(0, 10)}.json`,
+      filters: [
+        { name: 'JSON 文件', extensions: ['json'] },
+        { name: '所有文件', extensions: ['*'] }
+      ]
+    });
+
+    if (canceled || !filePath) {
+      return { success: false, canceled: true };
+    }
+
+    // 写入文件
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+    return { success: true, filePath, count: data.hosts.length };
+  } catch (error) {
+    console.error('❌ 导出失败:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// 导入主机
+ipcMain.handle('hosts:import', async (event, mode) => {
+  try {
+    // 打开文件选择对话框
+    const { filePaths, canceled } = await dialog.showOpenDialog(mainWindow, {
+      title: '导入主机配置',
+      filters: [
+        { name: 'JSON 文件', extensions: ['json'] },
+        { name: '所有文件', extensions: ['*'] }
+      ],
+      properties: ['openFile']
+    });
+
+    if (canceled || filePaths.length === 0) {
+      return { success: false, canceled: true };
+    }
+
+    // 读取文件
+    const fileContent = fs.readFileSync(filePaths[0], 'utf-8');
+    const data = JSON.parse(fileContent);
+
+    // 导入数据
+    return databaseService.importHosts(data, mode);
+  } catch (error) {
+    console.error('❌ 导入失败:', error);
+    return { success: false, error: error.message };
+  }
 });
 
 // 命令

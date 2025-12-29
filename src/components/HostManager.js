@@ -11,6 +11,8 @@ import {
   FiEye,
   FiEyeOff,
   FiPlay,
+  FiDownload,
+  FiUpload,
 } from 'react-icons/fi';
 
 const colors = [
@@ -24,6 +26,9 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
   const [showPassword, setShowPassword] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importExportResult, setImportExportResult] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     host: '',
@@ -125,6 +130,75 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
     }
   };
 
+  // 导出主机
+  const handleExport = async () => {
+    if (!window.electronAPI) return;
+
+    setExporting(true);
+    setImportExportResult(null);
+
+    try {
+      const result = await window.electronAPI.hosts.export();
+      if (result.canceled) {
+        setImportExportResult(null);
+      } else if (result.success) {
+        setImportExportResult({
+          type: 'success',
+          message: `成功导出 ${result.count} 个主机配置`
+        });
+      } else {
+        setImportExportResult({
+          type: 'error',
+          message: result.error || '导出失败'
+        });
+      }
+    } catch (error) {
+      setImportExportResult({
+        type: 'error',
+        message: error.message
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // 导入主机
+  const handleImport = async (mode = 'merge') => {
+    if (!window.electronAPI) return;
+
+    setImporting(true);
+    setImportExportResult(null);
+
+    try {
+      const result = await window.electronAPI.hosts.import(mode);
+      if (result.canceled) {
+        setImportExportResult(null);
+      } else if (result.success) {
+        let message = `导入完成：新增 ${result.imported} 个`;
+        if (result.updated > 0) message += `，更新 ${result.updated} 个`;
+        if (result.skipped > 0) message += `，跳过 ${result.skipped} 个`;
+        
+        setImportExportResult({
+          type: 'success',
+          message
+        });
+        onUpdate(); // 刷新列表
+      } else {
+        setImportExportResult({
+          type: 'error',
+          message: result.error || '导入失败'
+        });
+      }
+    } catch (error) {
+      setImportExportResult({
+        type: 'error',
+        message: error.message
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -150,13 +224,93 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
               </span>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-shell-card text-shell-text-dim hover:text-shell-text transition-colors"
-          >
-            <FiX size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* 导入按钮 */}
+            <div className="relative group">
+              <button
+                onClick={() => handleImport('merge')}
+                disabled={importing}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-shell-card border border-shell-border 
+                           rounded-lg text-sm text-shell-text-dim hover:text-shell-text 
+                           hover:border-shell-accent/30 disabled:opacity-50 transition-all"
+                title="导入主机配置"
+              >
+                {importing ? (
+                  <FiLoader className="animate-spin" size={14} />
+                ) : (
+                  <FiUpload size={14} />
+                )}
+                <span>导入</span>
+              </button>
+              {/* 下拉菜单 */}
+              <div className="absolute right-0 top-full mt-1 w-40 py-1 bg-shell-surface border border-shell-border 
+                              rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible 
+                              transition-all z-10">
+                <button
+                  onClick={() => handleImport('merge')}
+                  className="w-full px-3 py-2 text-left text-sm text-shell-text-dim hover:text-shell-text 
+                             hover:bg-shell-card transition-colors"
+                >
+                  合并导入
+                  <span className="block text-xs text-shell-text-dim/60">保留现有，更新重复</span>
+                </button>
+                <button
+                  onClick={() => handleImport('replace')}
+                  className="w-full px-3 py-2 text-left text-sm text-shell-text-dim hover:text-shell-text 
+                             hover:bg-shell-card transition-colors"
+                >
+                  替换导入
+                  <span className="block text-xs text-shell-text-dim/60">清空现有，全部替换</span>
+                </button>
+              </div>
+            </div>
+            {/* 导出按钮 */}
+            <button
+              onClick={handleExport}
+              disabled={exporting || hosts.length === 0}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-shell-card border border-shell-border 
+                         rounded-lg text-sm text-shell-text-dim hover:text-shell-text 
+                         hover:border-shell-accent/30 disabled:opacity-50 transition-all"
+              title="导出主机配置"
+            >
+              {exporting ? (
+                <FiLoader className="animate-spin" size={14} />
+              ) : (
+                <FiDownload size={14} />
+              )}
+              <span>导出</span>
+            </button>
+            <div className="w-px h-6 bg-shell-border mx-1" />
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg hover:bg-shell-card text-shell-text-dim hover:text-shell-text transition-colors"
+            >
+              <FiX size={20} />
+            </button>
+          </div>
         </div>
+        
+        {/* 导入导出结果提示 */}
+        {importExportResult && (
+          <div className={`mx-6 mt-4 p-3 rounded-lg border ${
+            importExportResult.type === 'success'
+              ? 'bg-shell-success/10 border-shell-success/30 text-shell-success'
+              : 'bg-shell-error/10 border-shell-error/30 text-shell-error'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {importExportResult.type === 'success' ? <FiCheck size={16} /> : <FiX size={16} />}
+                <span className="text-sm">{importExportResult.message}</span>
+              </div>
+              <button 
+                onClick={() => setImportExportResult(null)}
+                className="p-1 hover:opacity-70 transition-opacity"
+              >
+                <FiX size={14} />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex h-[calc(85vh-130px)]">
           {/* 主机列表 */}

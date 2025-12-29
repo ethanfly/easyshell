@@ -623,6 +623,112 @@ class DatabaseService {
     return { success: true };
   }
 
+  // ========== 导入导出方法 ==========
+
+  /**
+   * 导出所有主机信息为 JSON
+   */
+  exportHosts() {
+    const hosts = this.runQuery('SELECT * FROM hosts ORDER BY group_name, name');
+    
+    // 移除敏感信息的内部字段，只保留必要字段
+    const exportData = hosts.map(host => ({
+      name: host.name,
+      host: host.host,
+      port: host.port,
+      username: host.username,
+      password: host.password,
+      privateKey: host.private_key,
+      groupName: host.group_name,
+      color: host.color,
+      description: host.description,
+    }));
+
+    return {
+      version: '1.0',
+      exportTime: new Date().toISOString(),
+      appName: 'EasyShell',
+      hosts: exportData,
+    };
+  }
+
+  /**
+   * 导入主机信息
+   * @param {Object} data - 导入的 JSON 数据
+   * @param {string} mode - 导入模式: 'merge'(合并) | 'replace'(替换)
+   */
+  importHosts(data, mode = 'merge') {
+    if (!data || !data.hosts || !Array.isArray(data.hosts)) {
+      return { success: false, error: '无效的导入数据格式' };
+    }
+
+    let imported = 0;
+    let skipped = 0;
+    let updated = 0;
+
+    try {
+      // 如果是替换模式，先清空所有主机
+      if (mode === 'replace') {
+        this.sqliteDb.run('DELETE FROM hosts');
+      }
+
+      for (const host of data.hosts) {
+        // 验证必要字段
+        if (!host.name || !host.host || !host.username) {
+          skipped++;
+          continue;
+        }
+
+        // 检查是否已存在（以 host 地址为唯一标识）
+        const existing = this.runQuerySingle('SELECT id FROM hosts WHERE host = ?', [host.host]);
+
+        if (existing) {
+          if (mode === 'merge') {
+            // 合并模式：更新已存在的记录
+            this.sqliteDb.run(`
+              UPDATE hosts SET 
+                name = ?, port = ?, username = ?, password = ?, 
+                private_key = ?, group_name = ?, color = ?, description = ?,
+                updated_at = CURRENT_TIMESTAMP
+              WHERE host = ?
+            `, [
+              host.name, host.port || 22, host.username, host.password || '',
+              host.privateKey || '', host.groupName || '默认分组', 
+              host.color || '#58a6ff', host.description || '', host.host
+            ]);
+            updated++;
+          } else {
+            skipped++;
+          }
+        } else {
+          // 插入新记录
+          this.sqliteDb.run(`
+            INSERT INTO hosts (name, host, port, username, password, private_key, group_name, color, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            host.name, host.host, host.port || 22, host.username,
+            host.password || '', host.privateKey || '', 
+            host.groupName || '默认分组', host.color || '#58a6ff', 
+            host.description || ''
+          ]);
+          imported++;
+        }
+      }
+
+      this.saveDatabase();
+      return { 
+        success: true, 
+        imported, 
+        updated, 
+        skipped,
+        total: data.hosts.length 
+      };
+    } catch (error) {
+      console.error('❌ 导入失败:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // ========== 关闭数据库 ==========
 
   close() {
