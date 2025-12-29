@@ -152,17 +152,21 @@ class SFTPService {
           });
 
           readStream.on('error', (err) => {
+            writeStream.destroy();
             conn.end();
             fs.unlink(localPath, () => {});
             reject(err);
           });
 
           writeStream.on('error', (err) => {
+            readStream.destroy();
             conn.end();
+            fs.unlink(localPath, () => {});
             reject(err);
           });
 
-          writeStream.on('close', () => {
+          // 使用 'finish' 事件确保数据完全写入磁盘
+          writeStream.on('finish', () => {
             conn.end();
             resolve({ success: true, localPath });
           });
@@ -209,16 +213,19 @@ class SFTPService {
         });
 
         readStream.on('error', (err) => {
+          writeStream.destroy();
           conn.end();
           reject(err);
         });
 
         writeStream.on('error', (err) => {
+          readStream.destroy();
           conn.end();
           reject(err);
         });
 
-        writeStream.on('close', () => {
+        // 使用 'finish' 事件确保数据完全写入
+        writeStream.on('finish', () => {
           conn.end();
           resolve({ success: true, remotePath });
         });
