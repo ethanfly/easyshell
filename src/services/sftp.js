@@ -65,7 +65,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         sftp.readdir(remotePath, (err, list) => {
           conn.end();
@@ -73,7 +73,7 @@ class SFTPService {
             reject(err);
             return;
           }
-          
+
           // 格式化文件列表
           const files = list.map(item => ({
             filename: item.filename,
@@ -90,7 +90,7 @@ class SFTPService {
               isSymbolicLink: (item.attrs.mode & 0o120000) === 0o120000,
             }
           }));
-          
+
           resolve({ success: true, files });
         });
       });
@@ -154,14 +154,14 @@ class SFTPService {
           readStream.on('error', (err) => {
             writeStream.destroy();
             conn.end();
-            fs.unlink(localPath, () => {});
+            fs.unlink(localPath, () => { });
             reject(err);
           });
 
           writeStream.on('error', (err) => {
             readStream.destroy();
             conn.end();
-            fs.unlink(localPath, () => {});
+            fs.unlink(localPath, () => { });
             reject(err);
           });
 
@@ -244,7 +244,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         sftp.unlink(remotePath, (err) => {
           conn.end();
@@ -267,7 +267,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         sftp.mkdir(remotePath, (err) => {
           conn.end();
@@ -290,7 +290,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       // 递归删除目录内容
       const deleteRecursive = async (dirPath) => {
         return new Promise((resolve, reject) => {
@@ -304,7 +304,7 @@ class SFTPService {
               for (const item of list) {
                 const itemPath = `${dirPath}/${item.filename}`;
                 const isDir = (item.attrs.mode & 0o40000) === 0o40000;
-                
+
                 if (isDir) {
                   await deleteRecursive(itemPath);
                 } else {
@@ -345,7 +345,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         sftp.rename(oldPath, newPath, (err) => {
           conn.end();
@@ -368,10 +368,10 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         const writeStream = sftp.createWriteStream(remotePath);
-        
+
         writeStream.on('error', (err) => {
           conn.end();
           reject(err);
@@ -396,7 +396,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         let content = '';
         const readStream = sftp.createReadStream(remotePath);
@@ -427,7 +427,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         sftp.stat(remotePath, (err, stats) => {
           conn.end();
@@ -460,7 +460,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         sftp.chmod(remotePath, mode, (err) => {
           conn.end();
@@ -483,7 +483,7 @@ class SFTPService {
     let conn, sftp;
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
-      
+
       return new Promise((resolve, reject) => {
         sftp.chown(remotePath, uid, gid, (err) => {
           conn.end();
