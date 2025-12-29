@@ -87,6 +87,7 @@ function App() {
     setActiveTabs((prev) => [...prev, newTab]);
     setActiveTabId(tabId);
     setShowHostManager(false);
+    setSelectedHost(null); // 关闭右侧编辑面板
   }, []);
 
   // 关闭标签页
