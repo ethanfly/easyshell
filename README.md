@@ -9,7 +9,8 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/版本-1.0.0-00d4ff?style=for-the-badge&labelColor=0a1628" alt="Version">
+  <a href="https://github.com/ethanfly/easyshell"><img src="https://img.shields.io/github/stars/ethanfly/easyshell?style=for-the-badge&labelColor=0a1628&color=00d4ff" alt="Stars"></a>
+  <a href="https://github.com/ethanfly/easyshell/releases"><img src="https://img.shields.io/badge/版本-1.0.0-00d4ff?style=for-the-badge&labelColor=0a1628" alt="Version"></a>
   <img src="https://img.shields.io/badge/Electron-28-00ff88?style=for-the-badge&labelColor=0a1628" alt="Electron">
   <img src="https://img.shields.io/badge/React-18-61dafb?style=for-the-badge&labelColor=0a1628" alt="React">
   <img src="https://img.shields.io/badge/Capacitor-5.6-ff6b35?style=for-the-badge&labelColor=0a1628" alt="Capacitor">
@@ -17,6 +18,12 @@
 
 <p align="center">
   支持 <strong>Windows</strong> · <strong>macOS</strong> · <strong>Linux</strong> · <strong>Android</strong> 多平台运行
+</p>
+
+<p align="center">
+  <a href="https://github.com/ethanfly/easyshell">GitHub</a> ·
+  <a href="https://github.com/ethanfly/easyshell/releases">下载</a> ·
+  <a href="https://github.com/ethanfly/easyshell/issues">反馈问题</a>
 </p>
 
 ---
@@ -135,7 +142,7 @@ easyshell/
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/easyshell.git
+git clone https://github.com/ethanfly/easyshell.git
 cd easyshell
 
 # 安装前端依赖
