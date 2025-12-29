@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00f5ff"/>
+      <stop offset="100%" style="stop-color:#a855f7"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 背景 -->
+  <rect width="256" height="256" rx="48" fill="#0a0a15"/>
+  
+  <!-- 边框 -->
+  <rect x="4" y="4" width="248" height="248" rx="44" fill="none" stroke="url(#grad)" stroke-width="4"/>
+  
+  <!-- 终端窗口 -->
+  <rect x="32" y="48" width="192" height="160" rx="12" fill="#0d1117" stroke="#00f5ff" stroke-width="2"/>
+  
+  <!-- 标题栏 -->
+  <rect x="32" y="48" width="192" height="28" rx="12" fill="#161b22"/>
+  <rect x="32" y="64" width="192" height="12" fill="#161b22"/>
+  
+  <!-- 窗口按钮 -->
+  <circle cx="52" cy="62" r="5" fill="#ff5f56"/>
+  <circle cx="68" cy="62" r="5" fill="#ffbd2e"/>
+  <circle cx="84" cy="62" r="5" fill="#27ca40"/>
+
+  <!-- Shell > 符号 -->
+  <g filter="url(#glow)">
+    <path d="M60 115 L95 145 L60 175" 
+          fill="none" 
+          stroke="#00f5ff" 
+          stroke-width="10" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+  </g>
+  
+  <!-- 光标 -->
+  <rect x="115" y="132" width="80" height="26" rx="4" fill="url(#grad)" filter="url(#glow)"/>
+</svg>
+

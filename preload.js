@@ -75,5 +75,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return () => ipcRenderer.removeAllListeners(channel);
     },
   },
+
+  // SFTP 文件操作
+  sftp: {
+    list: (hostConfig, remotePath) => ipcRenderer.invoke('sftp:list', { hostConfig, remotePath }),
+    download: (hostConfig, remotePath) => ipcRenderer.invoke('sftp:download', { hostConfig, remotePath }),
+    upload: (hostConfig, localPath, remotePath) => ipcRenderer.invoke('sftp:upload', { hostConfig, localPath, remotePath }),
+    delete: (hostConfig, remotePath) => ipcRenderer.invoke('sftp:delete', { hostConfig, remotePath }),
+    mkdir: (hostConfig, remotePath) => ipcRenderer.invoke('sftp:mkdir', { hostConfig, remotePath }),
+    rmdir: (hostConfig, remotePath) => ipcRenderer.invoke('sftp:rmdir', { hostConfig, remotePath }),
+    rename: (hostConfig, oldPath, newPath) => ipcRenderer.invoke('sftp:rename', { hostConfig, oldPath, newPath }),
+    writeFile: (hostConfig, remotePath, content) => ipcRenderer.invoke('sftp:writeFile', { hostConfig, remotePath, content }),
+    readFile: (hostConfig, remotePath) => ipcRenderer.invoke('sftp:readFile', { hostConfig, remotePath }),
+    stat: (hostConfig, remotePath) => ipcRenderer.invoke('sftp:stat', { hostConfig, remotePath }),
+    chmod: (hostConfig, remotePath, mode) => ipcRenderer.invoke('sftp:chmod', { hostConfig, remotePath, mode }),
+    chown: (hostConfig, remotePath, uid, gid) => ipcRenderer.invoke('sftp:chown', { hostConfig, remotePath, uid, gid }),
+    
+    // 传输进度事件
+    onProgress: (callback) => {
+      const channel = 'sftp:progress';
+      ipcRenderer.on(channel, (event, progress) => callback(progress));
+      return () => ipcRenderer.removeAllListeners(channel);
+    },
+  },
 });
 

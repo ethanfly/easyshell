@@ -6,9 +6,10 @@ const path = require('path');
 const Store = require('electron-store');
 const databaseService = require('./src/services/database');
 const sshService = require('./src/services/ssh');
+const sftpService = require('./src/services/sftp');
 
 let mainWindow;
-const isDev = process.env.NODE_ENV !== 'production' || !app.isPackaged;
+const isDev = !app.isPackaged; // 只根据是否打包来判断开发模式
 
 // 配置存储
 const configStore = new Store({
@@ -182,8 +183,8 @@ ipcMain.handle('hosts:update', (event, { id, host }) => {
   return databaseService.updateHost(id, host);
 });
 
-ipcMain.handle('hosts:delete', (event, id) => {
-  return databaseService.deleteHost(id);
+ipcMain.handle('hosts:delete', async (event, id) => {
+  return await databaseService.deleteHost(id);
 });
 
 // 命令
@@ -274,5 +275,60 @@ ipcMain.handle('ssh:test', async (event, hostConfig) => {
 
 ipcMain.handle('ssh:exec', async (event, { hostConfig, command }) => {
   return await sshService.exec(hostConfig, command);
+});
+
+// ========== SFTP IPC ==========
+
+// 设置进度回调
+sftpService.setProgressCallback((progress) => {
+  mainWindow?.webContents.send('sftp:progress', progress);
+});
+
+ipcMain.handle('sftp:list', async (event, { hostConfig, remotePath }) => {
+  return await sftpService.list(hostConfig, remotePath);
+});
+
+ipcMain.handle('sftp:download', async (event, { hostConfig, remotePath }) => {
+  return await sftpService.download(hostConfig, remotePath, mainWindow);
+});
+
+ipcMain.handle('sftp:upload', async (event, { hostConfig, localPath, remotePath }) => {
+  return await sftpService.upload(hostConfig, localPath, remotePath);
+});
+
+ipcMain.handle('sftp:delete', async (event, { hostConfig, remotePath }) => {
+  return await sftpService.delete(hostConfig, remotePath);
+});
+
+ipcMain.handle('sftp:mkdir', async (event, { hostConfig, remotePath }) => {
+  return await sftpService.mkdir(hostConfig, remotePath);
+});
+
+ipcMain.handle('sftp:rmdir', async (event, { hostConfig, remotePath }) => {
+  return await sftpService.rmdir(hostConfig, remotePath);
+});
+
+ipcMain.handle('sftp:rename', async (event, { hostConfig, oldPath, newPath }) => {
+  return await sftpService.rename(hostConfig, oldPath, newPath);
+});
+
+ipcMain.handle('sftp:writeFile', async (event, { hostConfig, remotePath, content }) => {
+  return await sftpService.writeFile(hostConfig, remotePath, content);
+});
+
+ipcMain.handle('sftp:readFile', async (event, { hostConfig, remotePath }) => {
+  return await sftpService.readFile(hostConfig, remotePath);
+});
+
+ipcMain.handle('sftp:stat', async (event, { hostConfig, remotePath }) => {
+  return await sftpService.stat(hostConfig, remotePath);
+});
+
+ipcMain.handle('sftp:chmod', async (event, { hostConfig, remotePath, mode }) => {
+  return await sftpService.chmod(hostConfig, remotePath, mode);
+});
+
+ipcMain.handle('sftp:chown', async (event, { hostConfig, remotePath, uid, gid }) => {
+  return await sftpService.chown(hostConfig, remotePath, uid, gid);
 });
 

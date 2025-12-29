@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import {
   FiX,
   FiPlus,
-  FiEdit2,
   FiTrash2,
   FiServer,
   FiCheck,
@@ -11,6 +10,7 @@ import {
   FiKey,
   FiEye,
   FiEyeOff,
+  FiPlay,
 } from 'react-icons/fi';
 
 const colors = [
@@ -141,9 +141,15 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
       >
         {/* 头部 */}
         <div className="px-6 py-4 border-b border-shell-border flex items-center justify-between">
-          <h2 className="text-xl font-bold text-shell-text">
-            {isEditing ? (editingHost ? '编辑主机' : '添加主机') : '主机管理'}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-bold text-shell-text font-display">主机管理</h2>
+            {isEditing && (
+              <span className="px-2 py-0.5 bg-shell-accent/20 border border-shell-accent/30 
+                               rounded text-xs text-shell-accent font-medium">
+                {editingHost?.id ? '编辑中' : '新建'}
+              </span>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-shell-card text-shell-text-dim hover:text-shell-text transition-colors"
@@ -171,57 +177,67 @@ function HostManager({ hosts, initialEditHost, onClose, onConnect, onUpdate }) {
             </div>
 
             <div className="px-4 pb-4 space-y-2">
-              {hosts.map((host) => (
-                <div
-                  key={host.id}
-                  className="group p-3 rounded-lg border border-shell-border hover:border-shell-accent/30 
-                             bg-shell-card/50 hover:bg-shell-card transition-all cursor-pointer"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${host.color}20` }}
-                    >
-                      <FiServer size={18} style={{ color: host.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-shell-text truncate">
-                        {host.name}
+              {hosts.map((host) => {
+                const isSelected = editingHost?.id === host.id;
+                return (
+                  <div
+                    key={host.id}
+                    onClick={() => {
+                      setEditingHost(host);
+                      setIsEditing(true);
+                      setTestResult(null);
+                    }}
+                    className={`group p-3 rounded-lg border transition-all cursor-pointer
+                      ${isSelected 
+                        ? 'bg-shell-accent/10 border-shell-accent/50' 
+                        : 'bg-shell-card/50 border-shell-border hover:border-shell-accent/30 hover:bg-shell-card'
+                      }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: `${host.color}20` }}
+                      >
+                        <FiServer size={18} style={{ color: host.color }} />
                       </div>
-                      <div className="text-xs text-shell-text-dim truncate">
-                        {host.username}@{host.host}:{host.port}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-shell-text truncate">
+                          {host.name}
+                        </div>
+                        <div className="text-xs text-shell-text-dim truncate">
+                          {host.username}@{host.host}:{host.port}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-shell-border">
-                    <button
-                      onClick={() => onConnect(host)}
-                      className="flex-1 px-3 py-1.5 bg-shell-accent/20 text-shell-accent text-sm 
-                                 rounded-md hover:bg-shell-accent/30 transition-colors"
-                    >
-                      连接
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingHost(host);
-                        setIsEditing(true);
-                      }}
-                      className="p-1.5 rounded-md hover:bg-shell-border text-shell-text-dim 
-                                 hover:text-shell-text transition-colors"
-                    >
-                      <FiEdit2 size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(host.id)}
-                      className="p-1.5 rounded-md hover:bg-shell-error/20 text-shell-text-dim 
-                                 hover:text-shell-error transition-colors"
-                    >
-                      <FiTrash2 size={14} />
-                    </button>
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-shell-border/50">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onConnect(host);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 
+                                   bg-shell-accent/20 text-shell-accent text-sm 
+                                   rounded-md hover:bg-shell-accent/30 transition-colors"
+                      >
+                        <FiPlay size={12} />
+                        连接
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(host.id);
+                        }}
+                        className="p-1.5 rounded-md hover:bg-shell-error/20 text-shell-text-dim 
+                                   hover:text-shell-error transition-colors"
+                        title="删除主机"
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {hosts.length === 0 && (
                 <div className="text-center py-8 text-shell-text-dim">

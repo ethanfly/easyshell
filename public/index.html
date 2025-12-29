@@ -1,43 +1,147 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0a0e14" />
-    <meta name="description" content="EasyShell - 高颜值远程Shell管理终端" />
-    <title>EasyShell</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        overflow: hidden;
-        background: #0a0e14;
-      }
-      ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #161b22;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #30363d;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #484f58;
-      }
-    </style>
-  </head>
-  <body>
-    <noscript>您需要启用 JavaScript 才能运行此应用。</noscript>
-    <div id="root"></div>
-  </body>
-</html>
 
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#050810" />
+  <meta name="description" content="EasyShell - 赛博朋克风格远程Shell管理终端" />
+  <title>EasyShell</title>
+  <link rel="icon" type="image/svg+xml" href="%PUBLIC_URL%/icon.svg" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo.svg" />
+  <!-- Google Fonts - 科技感字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Orbitron:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: #050810;
+    }
+
+    /* 全局滚动条 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(10, 15, 24, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #1a2332 0%, #253244 100%);
+      border-radius: 4px;
+      border: 1px solid rgba(0, 212, 255, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, #253244 0%, rgba(0, 212, 255, 0.2) 100%);
+    }
+
+    /* 加载动画 */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #050810;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loader-ring {
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(26, 35, 50, 0.5);
+      border-top-color: #00d4ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loader-text {
+      margin-top: 20px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      color: #6b7a94;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .loader-text::after {
+      content: '';
+      animation: dots 1.5s steps(4) infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes dots {
+      0% {
+        content: '';
+      }
+
+      25% {
+        content: '.';
+      }
+
+      50% {
+        content: '..';
+      }
+
+      75% {
+        content: '...';
+      }
+
+      100% {
+        content: '';
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 加载屏幕 -->
+  <div id="loading-screen">
+    <img src="icon.svg" alt="EasyShell"
+      style="width: 80px; height: 80px; margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(0, 245, 255, 0.5));" />
+    <div class="loader-ring"></div>
+    <div class="loader-text">INITIALIZING</div>
+  </div>
+  <noscript>您需要启用 JavaScript 才能运行此应用。</noscript>
+  <div id="root"></div>
+  <script>
+    // 应用加载完成后隐藏加载屏幕
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        var loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          loadingScreen.classList.add('fade-out');
+          setTimeout(function () {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }
+      }, 500);
+    });
+  </script>
+</body>
+
+</html>

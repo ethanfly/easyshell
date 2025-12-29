@@ -2,15 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 全局样式 */
-* {
-  -webkit-app-region: no-drag;
+/* ========================================
+   EasyShell - Cyberpunk Theme
+   赛博朋克科技风格主题
+======================================== */
+
+/* CSS 变量定义 */
+:root {
+  --color-bg: #050810;
+  --color-surface: #0a0f18;
+  --color-card: #0f1520;
+  --color-border: #1a2332;
+  --color-accent: #00d4ff;
+  --color-accent-glow: rgba(0, 212, 255, 0.5);
+  --color-neon-pink: #ff2d95;
+  --color-neon-green: #00ff88;
+  --color-text: #e8f0ff;
+  --color-text-dim: #6b7a94;
 }
 
+/* 全局样式 */
+
 body {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  background: linear-gradient(135deg, #0a0e14 0%, #0d1117 50%, #161b22 100%);
-  color: #e6edf3;
+  font-family: 'Inter', 'Rajdhani', system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
   overflow: hidden;
   user-select: none;
 }
@@ -20,58 +36,208 @@ body {
   font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
 }
 
-/* 可拖拽区域 */
+/* 显示字体 - 科技感 */
+.font-display {
+  font-family: 'Rajdhani', 'Orbitron', system-ui, sans-serif;
+  letter-spacing: 0.05em;
+}
+
+/* 可拖拽区域 - Windows 窗口拖动 */
 .drag-region {
-  -webkit-app-region: drag;
+  -webkit-app-region: drag !important;
+  app-region: drag !important;
 }
 
 .no-drag {
-  -webkit-app-region: no-drag;
+  -webkit-app-region: no-drag !important;
+  app-region: no-drag !important;
 }
 
-/* 自定义滚动条 */
+/* ========================================
+   滚动条样式
+======================================== */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: rgba(26, 35, 50, 0.5);
   border-radius: 3px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #1a2332 0%, #253244 100%);
+  border-radius: 3px;
+  border: 1px solid rgba(0, 212, 255, 0.1);
 }
 
-/* 玻璃态效果 */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #253244 0%, #00d4ff33 100%);
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+/* ========================================
+   玻璃态效果
+======================================== */
 .glass {
-  background: rgba(22, 27, 34, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(48, 54, 61, 0.6);
+  background: rgba(10, 15, 24, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(26, 35, 50, 0.8);
 }
 
 .glass-hover:hover {
-  background: rgba(30, 36, 44, 0.9);
-  border-color: rgba(88, 166, 255, 0.3);
+  background: rgba(15, 21, 32, 0.9);
+  border-color: rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
 }
 
-/* 发光边框 */
+.glass-card {
+  background: linear-gradient(135deg, rgba(15, 21, 32, 0.9) 0%, rgba(10, 15, 24, 0.95) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(26, 35, 50, 0.6);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* ========================================
+   霓虹发光效果
+======================================== */
 .glow-border {
-  box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.3),
-              0 0 20px rgba(88, 166, 255, 0.1);
+  box-shadow: 
+    0 0 0 1px rgba(0, 212, 255, 0.3),
+    0 0 20px rgba(0, 212, 255, 0.15),
+    inset 0 0 20px rgba(0, 212, 255, 0.05);
 }
 
 .glow-border-active {
-  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.5),
-              0 0 30px rgba(88, 166, 255, 0.2);
+  box-shadow: 
+    0 0 0 2px rgba(0, 212, 255, 0.5),
+    0 0 30px rgba(0, 212, 255, 0.25),
+    inset 0 0 30px rgba(0, 212, 255, 0.1);
 }
 
-/* 输入框样式 */
+.neon-text {
+  text-shadow: 
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 40px currentColor;
+}
+
+.neon-box {
+  box-shadow: 
+    0 0 5px currentColor,
+    0 0 15px currentColor,
+    0 0 30px currentColor;
+}
+
+/* ========================================
+   按钮效果
+======================================== */
+.btn-cyber {
+  position: relative;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 168, 204, 0.1) 100%);
+  border: 1px solid rgba(0, 212, 255, 0.4);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.btn-cyber::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.btn-cyber:hover {
+  border-color: rgba(0, 212, 255, 0.8);
+  box-shadow: 
+    0 0 20px rgba(0, 212, 255, 0.3),
+    inset 0 0 20px rgba(0, 212, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-cyber:hover::before {
+  left: 100%;
+}
+
+.btn-cyber:active {
+  transform: translateY(0);
+}
+
+.btn-glow {
+  transition: all 0.2s ease;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-glow:active {
+  transform: translateY(0);
+}
+
+/* 粉色霓虹按钮 */
+.btn-neon-pink {
+  background: linear-gradient(135deg, rgba(255, 45, 149, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
+  border: 1px solid rgba(255, 45, 149, 0.4);
+}
+
+.btn-neon-pink:hover {
+  border-color: rgba(255, 45, 149, 0.8);
+  box-shadow: 0 0 25px rgba(255, 45, 149, 0.4);
+}
+
+/* ========================================
+   卡片效果
+======================================== */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 212, 255, 0.2);
+}
+
+.card-cyber {
+  position: relative;
+  background: linear-gradient(135deg, rgba(15, 21, 32, 0.95) 0%, rgba(10, 15, 24, 0.98) 100%);
+  border: 1px solid rgba(26, 35, 50, 0.8);
+  overflow: hidden;
+}
+
+.card-cyber::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.5), transparent);
+}
+
+.card-cyber::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 45, 149, 0.3), transparent);
+}
+
+/* ========================================
+   输入框样式
+======================================== */
 input, textarea {
   user-select: text;
 }
@@ -80,35 +246,45 @@ input:focus, textarea:focus {
   outline: none;
 }
 
-/* 按钮悬停效果 */
-.btn-glow {
-  transition: all 0.2s ease;
+.input-cyber {
+  background: rgba(5, 8, 16, 0.8);
+  border: 1px solid rgba(26, 35, 50, 0.8);
+  transition: all 0.3s ease;
 }
 
-.btn-glow:hover {
-  box-shadow: 0 0 20px rgba(88, 166, 255, 0.4);
-  transform: translateY(-1px);
+.input-cyber:focus {
+  border-color: rgba(0, 212, 255, 0.6);
+  box-shadow: 
+    0 0 0 3px rgba(0, 212, 255, 0.1),
+    0 0 20px rgba(0, 212, 255, 0.1);
 }
 
-.btn-glow:active {
-  transform: translateY(0);
+.input-cyber::placeholder {
+  color: #3d4a5c;
 }
 
-/* 卡片悬停效果 */
-.card-hover {
-  transition: all 0.2s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-}
-
-/* 终端样式 */
+/* ========================================
+   终端样式
+======================================== */
 .terminal-container {
-  background: #0d1117;
+  background: linear-gradient(180deg, #050810 0%, #0a0f18 100%);
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
+}
+
+/* 终端扫描线效果 */
+.terminal-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  animation: scan 4s linear infinite;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .xterm {
@@ -120,15 +296,35 @@ input:focus, textarea:focus {
 }
 
 .xterm-viewport::-webkit-scrollbar-track {
-  background: #161b22;
+  background: rgba(10, 15, 24, 0.5);
 }
 
 .xterm-viewport::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: linear-gradient(180deg, #1a2332 0%, #00d4ff22 100%);
   border-radius: 4px;
+  border: 1px solid rgba(0, 212, 255, 0.1);
 }
 
-/* 动画类 */
+/* ========================================
+   动画效果
+======================================== */
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(100vh - 2px));
+    opacity: 0;
+  }
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -142,11 +338,37 @@ input:focus, textarea:focus {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(88, 166, 255, 0.1) 50%,
+    rgba(0, 212, 255, 0.15) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+}
+
+/* 流光边框 */
+@keyframes borderFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.border-flow {
+  position: relative;
+}
+
+.border-flow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(90deg, #00d4ff, #a855f7, #ff2d95, #00d4ff);
+  background-size: 200% 100%;
+  animation: borderFlow 3s linear infinite;
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.6;
 }
 
 /* 脉冲点 */
@@ -164,52 +386,366 @@ input:focus, textarea:focus {
   }
   50% {
     opacity: 0.5;
-    transform: scale(1.2);
+    transform: scale(1.3);
   }
 }
 
-/* 状态颜色 */
+/* 呼吸灯效果 */
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.4;
+    box-shadow: 0 0 10px currentColor;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 25px currentColor;
+  }
+}
+
+.breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* ========================================
+   状态指示器
+======================================== */
 .status-online {
-  background: #3fb950;
-  box-shadow: 0 0 8px rgba(63, 185, 80, 0.6);
+  background: #00ff88;
+  box-shadow: 
+    0 0 8px rgba(0, 255, 136, 0.6),
+    0 0 20px rgba(0, 255, 136, 0.3);
 }
 
 .status-offline {
-  background: #8b949e;
+  background: #6b7a94;
 }
 
 .status-error {
-  background: #f85149;
-  box-shadow: 0 0 8px rgba(248, 81, 73, 0.6);
+  background: #ff3366;
+  box-shadow: 
+    0 0 8px rgba(255, 51, 102, 0.6),
+    0 0 20px rgba(255, 51, 102, 0.3);
 }
 
-/* 渐变背景 */
+.status-warning {
+  background: #ffd000;
+  box-shadow: 
+    0 0 8px rgba(255, 208, 0, 0.6),
+    0 0 20px rgba(255, 208, 0, 0.3);
+}
+
+/* ========================================
+   背景效果
+======================================== */
 .gradient-bg {
-  background: radial-gradient(ellipse at top left, rgba(88, 166, 255, 0.1) 0%, transparent 50%),
-              radial-gradient(ellipse at bottom right, rgba(188, 140, 255, 0.08) 0%, transparent 50%),
-              linear-gradient(135deg, #0a0e14 0%, #0d1117 100%);
+  background: 
+    radial-gradient(ellipse at 20% 0%, rgba(0, 212, 255, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 0% 50%, rgba(255, 45, 149, 0.04) 0%, transparent 40%),
+    linear-gradient(180deg, #050810 0%, #0a0f18 50%, #050810 100%);
 }
 
-/* 标签页效果 */
+/* 网格背景 */
+.cyber-grid {
+  background-image: 
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* 六边形图案 */
+.hex-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5L55 20v20L30 55 5 40V20z' fill='none' stroke='rgba(0,212,255,0.04)' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 60px 60px;
+}
+
+/* ========================================
+   标签页效果
+======================================== */
 .tab-active {
-  background: linear-gradient(180deg, rgba(88, 166, 255, 0.2) 0%, transparent 100%);
-  border-bottom: 2px solid #58a6ff;
+  background: linear-gradient(180deg, rgba(0, 212, 255, 0.15) 0%, transparent 100%);
+  border-bottom: 2px solid #00d4ff;
+  box-shadow: 0 2px 10px rgba(0, 212, 255, 0.2);
 }
 
-/* 命令提示框 */
+.tab-cyber {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.tab-cyber::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: #00d4ff;
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.tab-cyber:hover::after,
+.tab-cyber.active::after {
+  width: 100%;
+}
+
+/* ========================================
+   弹窗和提示
+======================================== */
+.modal-cyber {
+  background: linear-gradient(135deg, rgba(10, 15, 24, 0.98) 0%, rgba(5, 8, 16, 0.99) 100%);
+  border: 1px solid rgba(26, 35, 50, 0.8);
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(0, 212, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
 .command-hint {
-  background: rgba(22, 27, 34, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(48, 54, 61, 0.8);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  background: rgba(10, 15, 24, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(26, 35, 50, 0.8);
+  box-shadow: 
+    0 15px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(0, 212, 255, 0.1);
 }
 
-/* 代码高亮 */
+/* ========================================
+   代码高亮
+======================================== */
 .code-highlight {
-  color: #58a6ff;
-  background: rgba(88, 166, 255, 0.1);
-  padding: 2px 6px;
+  color: #00d4ff;
+  background: rgba(0, 212, 255, 0.1);
+  padding: 2px 8px;
   border-radius: 4px;
   font-family: 'JetBrains Mono', monospace;
+  border: 1px solid rgba(0, 212, 255, 0.2);
 }
 
+/* ========================================
+   Logo 和品牌
+======================================== */
+.logo-cyber {
+  background: linear-gradient(135deg, #00d4ff 0%, #a855f7 50%, #ff2d95 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+}
+
+.logo-icon {
+  background: linear-gradient(135deg, #00d4ff 0%, #a855f7 100%);
+  box-shadow: 
+    0 0 15px rgba(0, 212, 255, 0.4),
+    0 0 30px rgba(168, 85, 247, 0.2);
+}
+
+/* ========================================
+   分隔线
+======================================== */
+.divider-cyber {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+}
+
+.divider-vertical {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+}
+
+/* ========================================
+   角落装饰
+======================================== */
+.corner-decoration {
+  position: relative;
+}
+
+.corner-decoration::before,
+.corner-decoration::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.corner-decoration::before {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.corner-decoration::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}
+
+/* ========================================
+   选择框样式
+======================================== */
+input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: rgba(5, 8, 16, 0.8);
+  border: 1px solid rgba(26, 35, 50, 0.8);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+input[type="checkbox"]:checked {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: rgba(0, 212, 255, 0.6);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #00d4ff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+input[type="checkbox"]:hover {
+  border-color: rgba(0, 212, 255, 0.4);
+}
+
+/* ========================================
+   工具提示
+======================================== */
+.tooltip-cyber {
+  background: rgba(5, 8, 16, 0.95);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  color: #e8f0ff;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+/* ========================================
+   加载动画
+======================================== */
+.loader-cyber {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(26, 35, 50, 0.5);
+  border-top-color: #00d4ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 打字光标动画 */
+.typing-cursor::after {
+  content: '▋';
+  animation: typing 1s steps(1) infinite;
+  color: #00d4ff;
+}
+
+@keyframes typing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ========================================
+   进度条
+======================================== */
+.progress-cyber {
+  background: rgba(26, 35, 50, 0.5);
+  border-radius: 10px;
+  overflow: hidden;
+  height: 6px;
+}
+
+.progress-cyber-bar {
+  background: linear-gradient(90deg, #00d4ff, #a855f7);
+  height: 100%;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  transition: width 0.3s ease;
+}
+
+/* ========================================
+   徽章
+======================================== */
+.badge-cyber {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(168, 85, 247, 0.1) 100%);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ========================================
+   移动端适配
+======================================== */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .terminal-container {
+    border-radius: 0;
+  }
+  
+  .xterm {
+    padding: 8px;
+  }
+}
+
+/* 安全区域适配 (iPhone X+) */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/* 触摸优化 */
+@media (pointer: coarse) {
+  button, .btn-cyber, .card-hover {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  input, textarea, select {
+    font-size: 16px; /* 防止 iOS 自动缩放 */
+  }
+}
+
+/* 隐藏移动端滚动条 */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

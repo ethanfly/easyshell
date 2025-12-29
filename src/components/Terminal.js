@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
-import { FiCommand, FiRefreshCw } from 'react-icons/fi';
+import { FiCommand, FiRefreshCw, FiInfo, FiFolder, FiActivity, FiZap } from 'react-icons/fi';
 
-function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
+function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onToggleInfoPanel, onOpenSFTP, showInfoPanel }) {
   const containerRef = useRef(null);
   const terminalRef = useRef(null);
   const xtermRef = useRef(null);
@@ -15,10 +16,9 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
   const isConnectingRef = useRef(false);
   const isMountedRef = useRef(true);
   const initTimerRef = useRef(null);
-  const hasConnectedRef = useRef(false); // 防止重复连接
+  const hasConnectedRef = useRef(false);
   const resizeObserverRef = useRef(null);
   
-  // 用 ref 存储回调，避免作为依赖
   const onConnectionChangeRef = useRef(onConnectionChange);
   onConnectionChangeRef.current = onConnectionChange;
   
@@ -27,9 +27,8 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
   const [error, setError] = useState(null);
   const [isReady, setIsReady] = useState(false);
 
-  // 连接SSH - 不依赖 onConnectionChange
+  // 连接SSH
   const connect = useCallback(async () => {
-    // 防止重复连接
     if (!window.electronAPI || !hostId || isConnectingRef.current || connectionIdRef.current || hasConnectedRef.current) {
       return;
     }
@@ -68,16 +67,15 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
         const removeCloseListener = window.electronAPI.ssh.onClose(result.connectionId, () => {
           if (isMountedRef.current) {
             onConnectionChangeRef.current?.(false);
-            xtermRef.current?.writeln('\r\n\x1b[33m连接已断开\x1b[0m');
+            xtermRef.current?.writeln('\r\n\x1b[38;2;255;208;0m⚡ 连接已断开\x1b[0m');
             connectionIdRef.current = null;
             setConnectionId(null);
-            // 断开后允许重连
             hasConnectedRef.current = false;
           }
         });
 
         const removeErrorListener = window.electronAPI.ssh.onError(result.connectionId, (err) => {
-          xtermRef.current?.writeln(`\r\n\x1b[31m错误: ${err}\x1b[0m`);
+          xtermRef.current?.writeln(`\r\n\x1b[38;2;255;51;102m✖ 错误: ${err}\x1b[0m`);
         });
 
         cleanupListenersRef.current = () => {
@@ -86,7 +84,6 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
           removeErrorListener();
         };
 
-        // 延迟一点再发送终端尺寸，确保 shell 准备好
         setTimeout(() => {
           if (fitAddonRef.current && xtermRef.current) {
             try {
@@ -112,7 +109,7 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
       if (isMountedRef.current) {
         setError(err.message);
         onConnectionChangeRef.current?.(false);
-        xtermRef.current?.writeln(`\x1b[31m连接失败: ${err.message}\x1b[0m`);
+        xtermRef.current?.writeln(`\x1b[38;2;255;51;102m✖ 连接失败: ${err.message}\x1b[0m`);
       }
     } finally {
       isConnectingRef.current = false;
@@ -120,7 +117,7 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
         setIsConnecting(false);
       }
     }
-  }, [hostId]); // 只依赖 hostId
+  }, [hostId]);
 
   // 调整终端尺寸
   const fitTerminal = useCallback(() => {
@@ -129,7 +126,6 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
     try {
       fitAddonRef.current.fit();
       
-      // 通知 SSH 服务器尺寸变化
       if (connectionIdRef.current && window.electronAPI) {
         window.electronAPI.ssh.resize(
           connectionIdRef.current,
@@ -142,12 +138,11 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
     }
   }, []);
 
-  // 初始化终端
+  // 初始化终端 - 赛博朋克主题
   const initTerminal = useCallback(() => {
     if (!terminalRef.current || xtermRef.current) return false;
     
     const container = terminalRef.current;
-    // 确保容器有有效尺寸
     if (container.clientWidth < 100 || container.clientHeight < 100) {
       return false;
     }
@@ -158,58 +153,57 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
         cursorStyle: 'bar',
         fontSize: 14,
         fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-        lineHeight: 1.4,
-        scrollback: 1000,
+        lineHeight: 1.5,
+        scrollback: 2000,
         theme: {
-          background: '#0d1117',
-          foreground: '#e6edf3',
-          cursor: '#58a6ff',
-          cursorAccent: '#0d1117',
-          selectionBackground: 'rgba(88, 166, 255, 0.3)',
-          black: '#0d1117',
-          red: '#f85149',
-          green: '#3fb950',
-          yellow: '#d29922',
-          blue: '#58a6ff',
-          magenta: '#bc8cff',
-          cyan: '#56d4dd',
-          white: '#e6edf3',
-          brightBlack: '#484f58',
-          brightRed: '#ff7b72',
-          brightGreen: '#56d364',
-          brightYellow: '#e3b341',
-          brightBlue: '#79c0ff',
-          brightMagenta: '#d2a8ff',
-          brightCyan: '#76e3ea',
+          // 赛博朋克主题配色
+          background: '#050810',
+          foreground: '#e8f0ff',
+          cursor: '#00d4ff',
+          cursorAccent: '#050810',
+          selectionBackground: 'rgba(0, 212, 255, 0.25)',
+          selectionForeground: '#ffffff',
+          // 基础色
+          black: '#0a0f18',
+          red: '#ff3366',
+          green: '#00ff88',
+          yellow: '#ffd000',
+          blue: '#00d4ff',
+          magenta: '#a855f7',
+          cyan: '#00d4ff',
+          white: '#e8f0ff',
+          // 亮色
+          brightBlack: '#3d4a5c',
+          brightRed: '#ff6b8a',
+          brightGreen: '#5cffab',
+          brightYellow: '#ffe566',
+          brightBlue: '#5ce1ff',
+          brightMagenta: '#c084fc',
+          brightCyan: '#5ce1ff',
           brightWhite: '#ffffff',
         },
         allowProposedApi: true,
       });
 
-      // 加载插件
       const fitAddon = new FitAddon();
       const webLinksAddon = new WebLinksAddon();
       term.loadAddon(fitAddon);
       term.loadAddon(webLinksAddon);
       
-      // 打开终端
       term.open(container);
       xtermRef.current = term;
       fitAddonRef.current = fitAddon;
       
-      // 首次调整尺寸
       setTimeout(() => {
         fitAddon.fit();
       }, 0);
 
-      // 监听用户输入
       term.onData((data) => {
         if (connectionIdRef.current && window.electronAPI) {
           window.electronAPI.ssh.write(connectionIdRef.current, data);
         }
       });
       
-      // 监听容器尺寸变化
       resizeObserverRef.current = new ResizeObserver(() => {
         fitTerminal();
       });
@@ -222,7 +216,6 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
     }
   }, [fitTerminal]);
 
-  // 等待容器就绪后初始化
   useEffect(() => {
     isMountedRef.current = true;
     
@@ -231,19 +224,16 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
       
       if (initTerminal()) {
         setIsReady(true);
-        // 初始化成功后连接
         setTimeout(() => {
           if (isMountedRef.current) {
             connect();
           }
         }, 100);
       } else {
-        // 容器未就绪，继续尝试
         initTimerRef.current = setTimeout(tryInit, 100);
       }
     };
 
-    // 延迟开始尝试初始化
     initTimerRef.current = setTimeout(tryInit, 200);
 
     return () => {
@@ -276,7 +266,6 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
     };
   }, [initTerminal, connect]);
 
-  // 监听命令面板发送的命令
   useEffect(() => {
     const handleCommand = (e) => {
       if (e.detail.tabId === tabId && connectionIdRef.current && window.electronAPI) {
@@ -288,7 +277,6 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
     return () => window.removeEventListener('terminal-command', handleCommand);
   }, [tabId]);
 
-  // 重连
   const handleReconnect = useCallback(() => {
     if (cleanupListenersRef.current) {
       cleanupListenersRef.current();
@@ -299,11 +287,10 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
     }
     connectionIdRef.current = null;
     isConnectingRef.current = false;
-    hasConnectedRef.current = false; // 重置连接标志
+    hasConnectedRef.current = false;
     setConnectionId(null);
     setError(null);
     
-    // 完全重置终端（清屏+重置光标位置）
     if (xtermRef.current) {
       xtermRef.current.reset();
     }
@@ -311,68 +298,133 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette }) {
     setTimeout(() => connect(), 100);
   }, [connect]);
 
+  // 工具栏按钮组件
+  const ToolButton = ({ onClick, disabled, active, title, children }) => (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        p-2 rounded-lg transition-all duration-200
+        ${active 
+          ? 'bg-shell-accent/20 text-shell-accent border border-shell-accent/40' 
+          : 'bg-shell-card/50 border border-shell-border text-shell-text-dim hover:text-shell-text hover:border-shell-accent/30 hover:bg-shell-accent/10'
+        }
+        ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
+      `}
+      title={title}
+    >
+      {children}
+    </motion.button>
+  );
+
   return (
-    <div ref={containerRef} className="h-full flex flex-col bg-shell-bg">
+    <div ref={containerRef} className="h-full flex flex-col bg-shell-bg relative overflow-hidden">
+      {/* 背景装饰 */}
+      <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-shell-accent/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-shell-neon-purple/5 rounded-full blur-3xl pointer-events-none" />
+      
       {/* 终端工具栏 */}
-      <div className="h-10 bg-shell-surface/50 border-b border-shell-border flex items-center px-4 justify-between flex-shrink-0">
+      <div className="h-12 bg-shell-surface/80 backdrop-blur-xl border-b border-shell-border flex items-center px-4 justify-between flex-shrink-0 relative z-10">
+        {/* 左侧状态 */}
         <div className="flex items-center gap-4">
           {!isReady ? (
             <div className="flex items-center gap-2 text-shell-text-dim text-sm">
-              <div className="w-3 h-3 border-2 border-shell-text-dim border-t-transparent rounded-full animate-spin" />
-              初始化...
+              <div className="loader-cyber w-4 h-4" style={{ borderWidth: '2px' }} />
+              <span className="font-display tracking-wide">INITIALIZING</span>
             </div>
           ) : isConnecting ? (
             <div className="flex items-center gap-2 text-shell-warning text-sm">
-              <div className="w-3 h-3 border-2 border-shell-warning border-t-transparent rounded-full animate-spin" />
-              连接中...
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                <FiActivity size={16} />
+              </motion.div>
+              <span className="font-display tracking-wide">CONNECTING</span>
             </div>
           ) : error ? (
             <div className="flex items-center gap-2 text-shell-error text-sm">
-              <span className="w-2 h-2 rounded-full bg-shell-error" />
-              连接失败
+              <span className="w-2 h-2 rounded-full bg-shell-error" style={{ boxShadow: '0 0 8px rgba(255, 51, 102, 0.6)' }} />
+              <span className="font-display tracking-wide">CONNECTION FAILED</span>
             </div>
           ) : connectionId ? (
             <div className="flex items-center gap-2 text-shell-success text-sm">
-              <span className="w-2 h-2 rounded-full status-online" />
-              已连接
+              <motion.span 
+                className="w-2 h-2 rounded-full bg-shell-success"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{ boxShadow: '0 0 8px rgba(0, 255, 136, 0.6)' }}
+              />
+              <span className="font-display tracking-wide">CONNECTED</span>
+              <FiZap size={14} className="text-shell-success" />
             </div>
           ) : (
             <div className="flex items-center gap-2 text-shell-text-dim text-sm">
               <span className="w-2 h-2 rounded-full bg-shell-text-dim" />
-              未连接
+              <span className="font-display tracking-wide">OFFLINE</span>
             </div>
           )}
         </div>
 
+        {/* 右侧工具按钮 */}
         <div className="flex items-center gap-2">
-          <button
+          {/* 命令提示 */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onShowCommandPalette}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-shell-card 
-                       border border-shell-border hover:border-shell-accent/50 
-                       text-shell-text-dim hover:text-shell-text transition-all text-sm"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg btn-cyber text-sm text-shell-accent"
             title="命令面板 (Ctrl+K)"
           >
             <FiCommand size={14} />
-            <span className="hidden sm:inline">命令提示</span>
-          </button>
-          <button
+            <span className="hidden sm:inline font-display tracking-wide">COMMANDS</span>
+          </motion.button>
+          
+          <div className="divider-vertical h-6 mx-1" />
+          
+          {/* SFTP */}
+          <ToolButton
+            onClick={onOpenSFTP}
+            disabled={!connectionId}
+            title="SFTP 文件管理器"
+          >
+            <FiFolder size={16} />
+          </ToolButton>
+          
+          {/* 主机信息 */}
+          <ToolButton
+            onClick={onToggleInfoPanel}
+            active={showInfoPanel}
+            title="主机信息"
+          >
+            <FiInfo size={16} />
+          </ToolButton>
+          
+          <div className="divider-vertical h-6 mx-1" />
+          
+          {/* 重连 */}
+          <ToolButton
             onClick={handleReconnect}
             disabled={!isReady}
-            className="p-2 rounded-md hover:bg-shell-card text-shell-text-dim 
-                       hover:text-shell-text transition-colors disabled:opacity-50"
             title="重新连接"
           >
             <FiRefreshCw size={16} />
-          </button>
+          </ToolButton>
         </div>
       </div>
 
       {/* 终端内容 */}
       <div 
         ref={terminalRef} 
-        className="flex-1 p-2 terminal-container overflow-hidden"
+        className="flex-1 p-3 terminal-container overflow-hidden relative z-10"
         style={{ minHeight: '300px', minWidth: '400px' }}
       />
+
+      {/* 底部装饰线 */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-shell-accent/20 to-transparent pointer-events-none" />
     </div>
   );
 }

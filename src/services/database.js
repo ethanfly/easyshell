@@ -542,9 +542,25 @@ class DatabaseService {
     return { success: true };
   }
 
-  deleteHost(id) {
+  async deleteHost(id) {
+    // 先获取主机信息，用于远程删除
+    const host = this.runQuerySingle('SELECT host FROM hosts WHERE id = ?', [id]);
+    
+    // 删除本地记录
     this.sqliteDb.run('DELETE FROM hosts WHERE id = ?', [id]);
     this.saveDatabase();
+    
+    // 如果连接了远程 MySQL，同步删除远程记录
+    if (this.isRemoteConnected && this.mysqlConnection && host) {
+      try {
+        await this.mysqlConnection.execute('DELETE FROM hosts WHERE host = ?', [host.host]);
+        console.log(`✅ 远程数据库同步删除主机: ${host.host}`);
+      } catch (err) {
+        console.error('⚠️ 远程数据库删除失败:', err.message);
+        // 不影响本地删除的结果
+      }
+    }
+    
     return { success: true };
   }
 

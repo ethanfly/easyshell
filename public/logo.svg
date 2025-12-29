@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <!-- 主渐变 - 青色到紫色 -->
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00f5ff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#a855f7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 发光效果 -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- 外发光 -->
+    <filter id="outerGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feFlood flood-color="#00f5ff" flood-opacity="0.6"/>
+      <feComposite in2="blur" operator="in"/>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- 内部渐变 -->
+    <linearGradient id="shellGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00f5ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a855f7;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- 背景渐变 -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0a15;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  
+  <!-- 背景圆形 -->
+  <circle cx="256" cy="256" r="250" fill="url(#bgGradient)" stroke="url(#mainGradient)" stroke-width="4"/>
+  
+  <!-- 六边形装饰框 -->
+  <polygon 
+    points="256,40 430,130 430,310 256,400 82,310 82,130" 
+    fill="none" 
+    stroke="url(#mainGradient)" 
+    stroke-width="3"
+    opacity="0.5"
+  />
+  
+  <!-- 内部六边形 -->
+  <polygon 
+    points="256,80 390,150 390,290 256,360 122,290 122,150" 
+    fill="none" 
+    stroke="#00f5ff" 
+    stroke-width="2"
+    opacity="0.3"
+  />
+
+  <!-- 终端窗口背景 -->
+  <rect x="120" y="140" width="272" height="200" rx="12" ry="12" 
+        fill="#0d1117" stroke="url(#shellGradient)" stroke-width="3" filter="url(#outerGlow)"/>
+  
+  <!-- 终端标题栏 -->
+  <rect x="120" y="140" width="272" height="32" rx="12" ry="12" fill="#161b22"/>
+  <rect x="120" y="160" width="272" height="12" fill="#161b22"/>
+  
+  <!-- 窗口按钮 -->
+  <circle cx="142" cy="156" r="6" fill="#ff5f56"/>
+  <circle cx="162" cy="156" r="6" fill="#ffbd2e"/>
+  <circle cx="182" cy="156" r="6" fill="#27ca40"/>
+
+  <!-- Shell 提示符 > -->
+  <g filter="url(#glow)">
+    <path d="M160 220 L200 250 L160 280" 
+          fill="none" 
+          stroke="#00f5ff" 
+          stroke-width="12" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+  </g>
+  
+  <!-- 光标闪烁线 -->
+  <rect x="220" y="235" width="120" height="30" rx="4" fill="url(#shellGradient)" opacity="0.9" filter="url(#glow)"/>
+  
+  <!-- 装饰性扫描线 -->
+  <line x1="140" y1="300" x2="372" y2="300" stroke="#00f5ff" stroke-width="1" opacity="0.5"/>
+  <line x1="140" y1="310" x2="320" y2="310" stroke="#a855f7" stroke-width="1" opacity="0.3"/>
+
+  <!-- 底部装饰点 -->
+  <circle cx="256" cy="420" r="8" fill="#00f5ff" filter="url(#glow)"/>
+  <circle cx="220" cy="430" r="4" fill="#a855f7" opacity="0.7"/>
+  <circle cx="292" cy="430" r="4" fill="#ff6b35" opacity="0.7"/>
+  
+  <!-- 顶部装饰 -->
+  <polygon points="256,60 266,80 246,80" fill="#00f5ff" filter="url(#glow)"/>
+
+  <!-- 角落装饰 -->
+  <path d="M80 180 L80 140 L120 140" fill="none" stroke="#00f5ff" stroke-width="2" opacity="0.6"/>
+  <path d="M432 180 L432 140 L392 140" fill="none" stroke="#a855f7" stroke-width="2" opacity="0.6"/>
+  <path d="M80 332 L80 372 L120 372" fill="none" stroke="#ff6b35" stroke-width="2" opacity="0.6"/>
+  <path d="M432 332 L432 372 L392 372" fill="none" stroke="#00f5ff" stroke-width="2" opacity="0.6"/>
+</svg>
+
