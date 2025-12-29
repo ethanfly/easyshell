@@ -119,59 +119,39 @@ class SFTPService {
 
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
+      const filename = path.basename(remotePath);
+      const self = this;
 
       return new Promise((resolve, reject) => {
-        // 获取文件大小
-        sftp.stat(remotePath, (err, stats) => {
-          if (err) {
-            conn.end();
-            reject(err);
-            return;
-          }
-
-          const totalSize = stats.size;
-          let downloadedSize = 0;
-          const filename = path.basename(remotePath);
-
-          // 创建读写流
-          const readStream = sftp.createReadStream(remotePath);
-          const writeStream = fs.createWriteStream(localPath);
-
-          readStream.on('data', (chunk) => {
-            downloadedSize += chunk.length;
-            const percent = Math.round((downloadedSize / totalSize) * 100);
-            if (this.progressCallback) {
-              this.progressCallback({
+        // 使用 fastGet 方法进行下载，更加可靠
+        sftp.fastGet(remotePath, localPath, {
+          concurrency: 1,  // 单线程下载，更稳定
+          chunkSize: 32768, // 32KB 块大小
+          step: function(transferred, chunk, total) {
+            const percent = Math.round((transferred / total) * 100);
+            if (self.progressCallback) {
+              self.progressCallback({
                 type: 'download',
                 filename,
                 percent,
-                transferred: downloadedSize,
-                total: totalSize,
+                transferred,
+                total,
               });
             }
-          });
-
-          readStream.on('error', (err) => {
-            writeStream.destroy();
-            conn.end();
-            fs.unlink(localPath, () => { });
+          }
+        }, (err) => {
+          conn.end();
+          if (err) {
+            // 删除可能不完整的文件
+            try {
+              fs.unlinkSync(localPath);
+            } catch (e) {
+              // 忽略删除失败
+            }
             reject(err);
-          });
-
-          writeStream.on('error', (err) => {
-            readStream.destroy();
-            conn.end();
-            fs.unlink(localPath, () => { });
-            reject(err);
-          });
-
-          // 使用 'finish' 事件确保数据完全写入磁盘
-          writeStream.on('finish', () => {
-            conn.end();
-            resolve({ success: true, localPath });
-          });
-
-          readStream.pipe(writeStream);
+            return;
+          }
+          resolve({ success: true, localPath });
         });
       });
     } catch (err) {
@@ -187,50 +167,34 @@ class SFTPService {
 
     try {
       ({ conn, sftp } = await this.createConnection(hostConfig));
+      const filename = path.basename(localPath);
+      const self = this;
 
       return new Promise((resolve, reject) => {
-        const stats = fs.statSync(localPath);
-        const totalSize = stats.size;
-        let uploadedSize = 0;
-        const filename = path.basename(localPath);
-
-        // 创建读写流
-        const readStream = fs.createReadStream(localPath);
-        const writeStream = sftp.createWriteStream(remotePath);
-
-        readStream.on('data', (chunk) => {
-          uploadedSize += chunk.length;
-          const percent = Math.round((uploadedSize / totalSize) * 100);
-          if (this.progressCallback) {
-            this.progressCallback({
-              type: 'upload',
-              filename,
-              percent,
-              transferred: uploadedSize,
-              total: totalSize,
-            });
+        // 使用 fastPut 方法进行上传，更加可靠
+        sftp.fastPut(localPath, remotePath, {
+          concurrency: 1,  // 单线程上传，更稳定
+          chunkSize: 32768, // 32KB 块大小
+          step: function(transferred, chunk, total) {
+            const percent = Math.round((transferred / total) * 100);
+            if (self.progressCallback) {
+              self.progressCallback({
+                type: 'upload',
+                filename,
+                percent,
+                transferred,
+                total,
+              });
+            }
           }
-        });
-
-        readStream.on('error', (err) => {
-          writeStream.destroy();
+        }, (err) => {
           conn.end();
-          reject(err);
-        });
-
-        writeStream.on('error', (err) => {
-          readStream.destroy();
-          conn.end();
-          reject(err);
-        });
-
-        // 使用 'finish' 事件确保数据完全写入
-        writeStream.on('finish', () => {
-          conn.end();
+          if (err) {
+            reject(err);
+            return;
+          }
           resolve({ success: true, remotePath });
         });
-
-        readStream.pipe(writeStream);
       });
     } catch (err) {
       return { success: false, error: err.message };
