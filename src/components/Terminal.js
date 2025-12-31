@@ -319,16 +319,19 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
         connectionIdRef.current = null;
       }
       
-      // 清理 WebGL 渲染器
-      if (webglAddonRef.current) {
-        webglAddonRef.current.dispose();
-        webglAddonRef.current = null;
+      // 安全清理终端及其插件
+      // 注意：必须先 dispose terminal，它会自动清理所有加载的 addon
+      try {
+        if (xtermRef.current) {
+          xtermRef.current.dispose();
+          xtermRef.current = null;
+        }
+      } catch (e) {
+        console.warn('终端清理时出错:', e);
       }
       
-      if (xtermRef.current) {
-        xtermRef.current.dispose();
-        xtermRef.current = null;
-      }
+      // 清理引用
+      webglAddonRef.current = null;
       fitAddonRef.current = null;
     };
   }, [initTerminal, connect]);

@@ -54,13 +54,44 @@ function App() {
     checkRemoteStatus();
   }, [loadHosts, checkRemoteStatus]);
 
+  // 关闭标签页 (需要在 useEffect 之前定义)
+  const closeTab = useCallback((tabId) => {
+    setActiveTabs((prev) => {
+      const newTabs = prev.filter((t) => t.id !== tabId);
+      return newTabs;
+    });
+    setActiveTabId((prevActiveId) => {
+      if (prevActiveId === tabId) {
+        // 找到要关闭的标签的索引
+        const tabIndex = activeTabs.findIndex(t => t.id === tabId);
+        const remainingTabs = activeTabs.filter((t) => t.id !== tabId);
+        if (remainingTabs.length > 0) {
+          // 优先切换到右边的标签，否则切换到左边的
+          const newIndex = Math.min(tabIndex, remainingTabs.length - 1);
+          return remainingTabs[newIndex].id;
+        }
+        return null;
+      }
+      return prevActiveId;
+    });
+  }, [activeTabs]);
+
   // 键盘快捷键
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Ctrl+K: 打开命令面板
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setShowCommandPalette(true);
       }
+      // Ctrl+W: 关闭当前标签页
+      if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+        e.preventDefault();
+        if (activeTabId) {
+          closeTab(activeTabId);
+        }
+      }
+      // Escape: 关闭弹窗
       if (e.key === 'Escape') {
         setShowCommandPalette(false);
         setShowHostManager(false);
@@ -70,7 +101,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [activeTabId, closeTab]);
 
   // 连接主机
   const connectHost = useCallback((host) => {
@@ -89,21 +120,6 @@ function App() {
     setShowHostManager(false);
     setSelectedHost(null); // 关闭右侧编辑面板
   }, []);
-
-  // 关闭标签页
-  const closeTab = useCallback((tabId) => {
-    setActiveTabs((prev) => {
-      const newTabs = prev.filter((t) => t.id !== tabId);
-      return newTabs;
-    });
-    setActiveTabId((prevActiveId) => {
-      if (prevActiveId === tabId) {
-        const remainingTabs = activeTabs.filter((t) => t.id !== tabId);
-        return remainingTabs.length > 0 ? remainingTabs[remainingTabs.length - 1].id : null;
-      }
-      return prevActiveId;
-    });
-  }, [activeTabs]);
 
   // 更新连接状态
   const handleConnectionChange = useCallback((tabId, connected) => {
