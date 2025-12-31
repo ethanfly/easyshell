@@ -61,7 +61,7 @@ function TitleBar() {
           </span>
           {/* 版本徽章 */}
           <span className="badge-cyber text-shell-accent">
-            V1.0.1
+            V1.0.2
           </span>
         </div>
 
