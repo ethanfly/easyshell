@@ -7,7 +7,7 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import '@xterm/xterm/css/xterm.css';
 import { FiCommand, FiRefreshCw, FiInfo, FiFolder, FiActivity, FiZap } from 'react-icons/fi';
 
-function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onToggleInfoPanel, onOpenSFTP, showInfoPanel }) {
+function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onToggleInfoPanel, onOpenSFTP, showInfoPanel, onCloseTab }) {
   const containerRef = useRef(null);
   const terminalRef = useRef(null);
   const xtermRef = useRef(null);
@@ -25,6 +25,12 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
   
   const onConnectionChangeRef = useRef(onConnectionChange);
   onConnectionChangeRef.current = onConnectionChange;
+  
+  const onCloseTabRef = useRef(onCloseTab);
+  onCloseTabRef.current = onCloseTab;
+  
+  const onShowCommandPaletteRef = useRef(onShowCommandPalette);
+  onShowCommandPaletteRef.current = onShowCommandPalette;
   
   const [connectionId, setConnectionId] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -223,6 +229,27 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
         if (connectionIdRef.current && window.electronAPI) {
           window.electronAPI.ssh.write(connectionIdRef.current, data);
         }
+      });
+
+      // 自定义按键处理 - 拦截 Ctrl+W 和 Ctrl+K
+      term.attachCustomKeyEventHandler((e) => {
+        // Ctrl+W: 关闭当前标签页
+        if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+          e.preventDefault();
+          if (onCloseTabRef.current) {
+            onCloseTabRef.current();
+          }
+          return false; // 阻止 xterm 处理
+        }
+        // Ctrl+K: 打开命令面板
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          if (onShowCommandPaletteRef.current) {
+            onShowCommandPaletteRef.current();
+          }
+          return false;
+        }
+        return true; // 允许 xterm 处理其他按键
       });
 
       // 选中自动复制到剪贴板

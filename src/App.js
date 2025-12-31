@@ -371,6 +371,7 @@ function App() {
                       onToggleInfoPanel={() => setShowInfoPanel(!showInfoPanel)}
                       onOpenSFTP={() => setShowSFTP(true)}
                       showInfoPanel={showInfoPanel}
+                      onCloseTab={() => closeTab(tab.id)}
                     />
                   </div>
                 ))
