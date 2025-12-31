@@ -366,6 +366,7 @@ function App() {
                     <Terminal
                       tabId={tab.id}
                       hostId={tab.hostId}
+                      isActive={activeTabId === tab.id}
                       onConnectionChange={(connected) => handleConnectionChange(tab.id, connected)}
                       onShowCommandPalette={openCommandPalette}
                       onToggleInfoPanel={() => setShowInfoPanel(!showInfoPanel)}

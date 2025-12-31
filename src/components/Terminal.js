@@ -7,7 +7,7 @@ import { WebglAddon } from '@xterm/addon-webgl';
 import '@xterm/xterm/css/xterm.css';
 import { FiCommand, FiRefreshCw, FiInfo, FiFolder, FiActivity, FiZap } from 'react-icons/fi';
 
-function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onToggleInfoPanel, onOpenSFTP, showInfoPanel, onCloseTab }) {
+function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPalette, onToggleInfoPanel, onOpenSFTP, showInfoPanel, onCloseTab }) {
   const containerRef = useRef(null);
   const terminalRef = useRef(null);
   const xtermRef = useRef(null);
@@ -31,6 +31,9 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
   
   const onShowCommandPaletteRef = useRef(onShowCommandPalette);
   onShowCommandPaletteRef.current = onShowCommandPalette;
+  
+  const isActiveRef = useRef(isActive);
+  isActiveRef.current = isActive;
   
   const [connectionId, setConnectionId] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -231,8 +234,13 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
         }
       });
 
-      // 自定义按键处理 - 拦截 Ctrl+W 和 Ctrl+K
+      // 自定义按键处理 - 拦截 Ctrl+W 和 Ctrl+K（仅当前活动标签页响应）
       term.attachCustomKeyEventHandler((e) => {
+        // 只有活动标签页才响应快捷键
+        if (!isActiveRef.current) {
+          return true;
+        }
+        
         // Ctrl+W: 关闭当前标签页
         if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
           e.preventDefault();
