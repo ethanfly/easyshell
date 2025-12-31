@@ -36,6 +36,16 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
   const isActiveRef = useRef(isActive);
   isActiveRef.current = isActive;
   
+  // 当标签页变为活动状态时，自动聚焦终端
+  useEffect(() => {
+    if (isActive && xtermRef.current) {
+      // 短暂延迟确保 DOM 已更新
+      setTimeout(() => {
+        xtermRef.current?.focus();
+      }, 50);
+    }
+  }, [isActive]);
+  
   const [connectionId, setConnectionId] = useState(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
