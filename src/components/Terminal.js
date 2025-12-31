@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
+import { WebglAddon } from '@xterm/addon-webgl';
 import '@xterm/xterm/css/xterm.css';
 import { FiCommand, FiRefreshCw, FiInfo, FiFolder, FiActivity, FiZap } from 'react-icons/fi';
 
@@ -19,6 +20,8 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
   const hasConnectedRef = useRef(false);
   const resizeObserverRef = useRef(null);
   const contextMenuHandlerRef = useRef(null);
+  const resizeTimeoutRef = useRef(null);
+  const webglAddonRef = useRef(null);
   
   const onConnectionChangeRef = useRef(onConnectionChange);
   onConnectionChangeRef.current = onConnectionChange;
@@ -154,8 +157,12 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
         cursorStyle: 'bar',
         fontSize: 14,
         fontFamily: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-        lineHeight: 1.5,
-        scrollback: 2000,
+        lineHeight: 1.4,
+        scrollback: 1000,  // 减少滚动缓冲区提升性能
+        fastScrollModifier: 'alt',  // 快速滚动
+        fastScrollSensitivity: 5,
+        smoothScrollDuration: 0,  // 禁用平滑滚动提升性能
+        scrollSensitivity: 1,
         theme: {
           // 赛博朋克主题配色
           background: '#050810',
@@ -195,6 +202,19 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
       xtermRef.current = term;
       fitAddonRef.current = fitAddon;
       
+      // 尝试加载 WebGL 渲染器提升性能
+      try {
+        const webglAddon = new WebglAddon();
+        webglAddon.onContextLoss(() => {
+          webglAddon.dispose();
+          webglAddonRef.current = null;
+        });
+        term.loadAddon(webglAddon);
+        webglAddonRef.current = webglAddon;
+      } catch (e) {
+        console.warn('WebGL 渲染器不可用，使用默认渲染器:', e);
+      }
+      
       setTimeout(() => {
         fitAddon.fit();
       }, 0);
@@ -229,8 +249,14 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
       };
       container.addEventListener('contextmenu', contextMenuHandlerRef.current);
       
+      // 使用防抖的 ResizeObserver 避免频繁调用
       resizeObserverRef.current = new ResizeObserver(() => {
-        fitTerminal();
+        if (resizeTimeoutRef.current) {
+          clearTimeout(resizeTimeoutRef.current);
+        }
+        resizeTimeoutRef.current = setTimeout(() => {
+          fitTerminal();
+        }, 100);  // 100ms 防抖
       });
       resizeObserverRef.current.observe(container);
 
@@ -268,6 +294,10 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
         clearTimeout(initTimerRef.current);
       }
       
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+      
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
         resizeObserverRef.current = null;
@@ -287,6 +317,12 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
       if (connectionIdRef.current && window.electronAPI) {
         window.electronAPI.ssh.disconnect(connectionIdRef.current);
         connectionIdRef.current = null;
+      }
+      
+      // 清理 WebGL 渲染器
+      if (webglAddonRef.current) {
+        webglAddonRef.current.dispose();
+        webglAddonRef.current = null;
       }
       
       if (xtermRef.current) {
@@ -329,15 +365,13 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
     setTimeout(() => connect(), 100);
   }, [connect]);
 
-  // 工具栏按钮组件
+  // 工具栏按钮组件 - 简化动画提升性能
   const ToolButton = ({ onClick, disabled, active, title, children }) => (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    <button
       onClick={onClick}
       disabled={disabled}
       className={`
-        p-2 rounded-lg transition-all duration-200
+        p-2 rounded-lg transition-colors duration-100
         ${active 
           ? 'bg-shell-accent/20 text-shell-accent border border-shell-accent/40' 
           : 'bg-shell-card/50 border border-shell-border text-shell-text-dim hover:text-shell-text hover:border-shell-accent/30 hover:bg-shell-accent/10'
@@ -347,15 +381,13 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
       title={title}
     >
       {children}
-    </motion.button>
+    </button>
   );
 
   return (
     <div ref={containerRef} className="h-full flex flex-col bg-shell-bg relative overflow-hidden">
-      {/* 背景装饰 */}
-      <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
-      <div className="absolute top-0 right-0 w-64 h-64 bg-shell-accent/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-shell-neon-purple/5 rounded-full blur-3xl pointer-events-none" />
+      {/* 简化背景装饰以提升性能 */}
+      <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
       
       {/* 终端工具栏 */}
       <div className="h-12 bg-shell-surface/80 backdrop-blur-xl border-b border-shell-border flex items-center px-4 justify-between flex-shrink-0 relative z-10">
@@ -383,10 +415,8 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
             </div>
           ) : connectionId ? (
             <div className="flex items-center gap-2 text-shell-success text-sm">
-              <motion.span 
+              <span 
                 className="w-2 h-2 rounded-full bg-shell-success"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 2, repeat: Infinity }}
                 style={{ boxShadow: '0 0 8px rgba(0, 255, 136, 0.6)' }}
               />
               <span className="font-display tracking-wide">CONNECTED</span>
@@ -403,16 +433,14 @@ function Terminal({ tabId, hostId, onConnectionChange, onShowCommandPalette, onT
         {/* 右侧工具按钮 */}
         <div className="flex items-center gap-2">
           {/* 命令提示 */}
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={onShowCommandPalette}
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg btn-cyber text-sm text-shell-accent"
             title="命令面板 (Ctrl+K)"
           >
             <FiCommand size={14} />
             <span className="hidden sm:inline font-display tracking-wide">COMMANDS</span>
-          </motion.button>
+          </button>
           
           <div className="divider-vertical h-6 mx-1" />
           
