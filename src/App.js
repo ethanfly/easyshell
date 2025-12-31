@@ -84,13 +84,6 @@ function App() {
         e.preventDefault();
         setShowCommandPalette(true);
       }
-      // Ctrl+W: 关闭当前标签页
-      if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
-        e.preventDefault();
-        if (activeTabId) {
-          closeTab(activeTabId);
-        }
-      }
       // Escape: 关闭弹窗
       if (e.key === 'Escape') {
         setShowCommandPalette(false);
@@ -101,7 +94,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTabId, closeTab]);
+  }, []);
 
   // 连接主机
   const connectHost = useCallback((host) => {

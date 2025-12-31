@@ -22,6 +22,7 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
   const contextMenuHandlerRef = useRef(null);
   const resizeTimeoutRef = useRef(null);
   const webglAddonRef = useRef(null);
+  const keydownHandlerRef = useRef(null);
   
   const onConnectionChangeRef = useRef(onConnectionChange);
   onConnectionChangeRef.current = onConnectionChange;
@@ -234,31 +235,36 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
         }
       });
 
-      // 自定义按键处理 - 拦截 Ctrl+W 和 Ctrl+K（仅当前活动标签页响应）
-      term.attachCustomKeyEventHandler((e) => {
+      // 在容器上添加键盘事件监听器（捕获阶段），确保能拦截并阻止事件冒泡
+      keydownHandlerRef.current = (e) => {
         // 只有活动标签页才响应快捷键
         if (!isActiveRef.current) {
-          return true;
+          return;
         }
         
         // Ctrl+W: 关闭当前标签页
         if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
           e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
           if (onCloseTabRef.current) {
             onCloseTabRef.current();
           }
-          return false; // 阻止 xterm 处理
+          return;
         }
         // Ctrl+K: 打开命令面板
         if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
           e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
           if (onShowCommandPaletteRef.current) {
             onShowCommandPaletteRef.current();
           }
-          return false;
+          return;
         }
-        return true; // 允许 xterm 处理其他按键
-      });
+      };
+      // 使用捕获阶段确保在 xterm 处理之前拦截
+      container.addEventListener('keydown', keydownHandlerRef.current, true);
 
       // 选中自动复制到剪贴板
       term.onSelectionChange(() => {
@@ -342,6 +348,12 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
       if (contextMenuHandlerRef.current && terminalRef.current) {
         terminalRef.current.removeEventListener('contextmenu', contextMenuHandlerRef.current);
         contextMenuHandlerRef.current = null;
+      }
+      
+      // 清理键盘事件监听器
+      if (keydownHandlerRef.current && terminalRef.current) {
+        terminalRef.current.removeEventListener('keydown', keydownHandlerRef.current, true);
+        keydownHandlerRef.current = null;
       }
       
       if (cleanupListenersRef.current) {
