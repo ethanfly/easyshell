@@ -630,6 +630,7 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
         input={currentInput}
         visible={showSuggestions && isActive && connectionId}
         cursorPosition={cursorPosition}
+        containerHeight={containerRef.current?.offsetHeight || 600}
         onSelect={handleSuggestionSelect}
         onClose={handleCloseSuggestions}
       />

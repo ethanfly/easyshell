@@ -205,10 +205,12 @@ const getCategoryIcon = (category) => {
   }
 };
 
-function CommandSuggestions({ input, position, onSelect, onClose, visible, cursorPosition }) {
+function CommandSuggestions({ input, onSelect, onClose, visible, cursorPosition, containerHeight }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const listRef = useRef(null);
   const selectedRef = useRef(null);
+  const suggestionsRef = useRef(null);
+  const [showAbove, setShowAbove] = useState(false);
 
   // 根据输入过滤命令
   const suggestions = React.useMemo(() => {
@@ -276,21 +278,43 @@ function CommandSuggestions({ input, position, onSelect, onClose, visible, curso
 
   if (!visible || suggestions.length === 0) return null;
 
-  // 计算提示框位置（在光标下方）
-  const positionStyle = cursorPosition ? {
-    top: cursorPosition.top + 20,
-    left: cursorPosition.left,
-  } : {
-    bottom: position?.bottom || 60,
-    left: position?.left || 16,
-  };
+  // 估算提示框高度（标题 + 每项约28px，最多8项）
+  const estimatedHeight = 28 + Math.min(suggestions.length, 8) * 28;
+  
+  // 计算提示框位置，智能判断显示在光标上方还是下方
+  let positionStyle = {};
+  
+  if (cursorPosition) {
+    const spaceBelow = (containerHeight || 600) - cursorPosition.top - 20;
+    const shouldShowAbove = spaceBelow < estimatedHeight && cursorPosition.top > estimatedHeight;
+    
+    if (shouldShowAbove) {
+      // 显示在光标上方
+      positionStyle = {
+        bottom: (containerHeight || 600) - cursorPosition.top + 5,
+        left: Math.max(10, Math.min(cursorPosition.left, 200)),
+      };
+    } else {
+      // 显示在光标下方
+      positionStyle = {
+        top: cursorPosition.top + 20,
+        left: Math.max(10, Math.min(cursorPosition.left, 200)),
+      };
+    }
+  } else {
+    positionStyle = {
+      bottom: 60,
+      left: 16,
+    };
+  }
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -5, scale: 0.98 }}
+        ref={suggestionsRef}
+        initial={{ opacity: 0, y: cursorPosition && positionStyle.bottom ? 5 : -5, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -5, scale: 0.98 }}
+        exit={{ opacity: 0, y: cursorPosition && positionStyle.bottom ? 5 : -5, scale: 0.98 }}
         transition={{ duration: 0.1 }}
         className="absolute z-50 bg-shell-surface/95 backdrop-blur-xl border border-shell-accent/30 
                    rounded-lg shadow-2xl overflow-hidden min-w-[240px] max-w-[360px]"
