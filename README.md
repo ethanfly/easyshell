@@ -171,6 +171,49 @@ npm run dist
 
 ---
 
+## 🏷️ 版本发布
+
+项目已配置 GitHub Actions 自动化发布流程。
+
+### 一键发布
+
+```bash
+# 发布补丁版本 (1.0.0 -> 1.0.1)
+npm run release
+
+# 发布次要版本 (1.0.0 -> 1.1.0)
+npm run release:minor
+
+# 发布主要版本 (1.0.0 -> 2.0.0)
+npm run release:major
+```
+
+发布脚本会自动：
+1. ✅ 更新 `package.json` 版本号
+2. ✅ 更新界面显示的版本号
+3. ✅ 提交更改
+4. ✅ 创建 Git 标签
+5. ✅ 推送到 GitHub
+6. ✅ 触发 GitHub Actions 自动构建
+
+### 自动构建
+
+当推送 `v*` 格式的标签时（如 `v1.0.0`），GitHub Actions 将自动：
+
+| 平台 | 产物 |
+|------|------|
+| Windows | `EasyShell Setup x.x.x.exe` |
+| macOS | `EasyShell-x.x.x.dmg` |
+| Linux | `EasyShell-x.x.x.AppImage` |
+
+构建完成后会自动创建 GitHub Release 并上传安装包。
+
+### 查看构建状态
+
+[![Build Status](https://github.com/ethanfly/easyshell/actions/workflows/release.yml/badge.svg)](https://github.com/ethanfly/easyshell/actions)
+
+---
+
 ## 📱 移动端部署
 
 ### 1. 启动后端服务器
