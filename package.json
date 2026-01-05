@@ -1,6 +1,6 @@
 {
     "name": "easyshell",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "跨平台远程Shell管理终端 - 支持 Windows/Mac/Linux/Android",
     "author": "EasyShell Team",
     "main": "main.js",
