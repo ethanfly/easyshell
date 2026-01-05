@@ -15,13 +15,13 @@ jobs:
         include:
           - os: windows-latest
             artifact_name: EasyShell-Windows
-            build_cmd: npm run build && npx electron-builder --win
+            build_cmd: npm run build && npx electron-builder --win --publish never
           - os: macos-latest
             artifact_name: EasyShell-Mac
-            build_cmd: npm run build && npx electron-builder --mac
+            build_cmd: npm run build && npx electron-builder --mac --publish never
           - os: ubuntu-latest
             artifact_name: EasyShell-Linux
-            build_cmd: npm run build && npx electron-builder --linux
+            build_cmd: npm run build && npx electron-builder --linux --publish never
 
     steps:
       - name: Checkout code
@@ -42,8 +42,6 @@ jobs:
 
       - name: Build application
         run: ${{ matrix.build_cmd }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
