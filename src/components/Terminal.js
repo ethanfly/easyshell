@@ -83,6 +83,7 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
   const [isConnecting, setIsConnecting] = useState(false);
   const [currentInput, setCurrentInput] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [cursorPosition, setCursorPosition] = useState(null);
   const inputBufferRef = useRef('');
   const [error, setError] = useState(null);
   const [isReady, setIsReady] = useState(false);
@@ -280,6 +281,21 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
           window.electronAPI.ssh.write(connectionIdRef.current, data);
         }
         
+        // 更新光标位置
+        const updateCursorPosition = () => {
+          if (terminalRef.current && xtermRef.current) {
+            const cursorY = xtermRef.current.buffer.active.cursorY;
+            const cursorX = xtermRef.current.buffer.active.cursorX;
+            const cellWidth = terminalRef.current.offsetWidth / xtermRef.current.cols;
+            const cellHeight = terminalRef.current.offsetHeight / xtermRef.current.rows;
+            
+            setCursorPosition({
+              top: (cursorY + 1) * cellHeight + 60, // 加上工具栏高度
+              left: cursorX * cellWidth + 16,
+            });
+          }
+        };
+        
         // 追踪用户输入以显示命令建议
         if (data === '\r' || data === '\n') {
           // 回车：清空输入缓冲区
@@ -291,6 +307,7 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
           inputBufferRef.current = inputBufferRef.current.slice(0, -1);
           setCurrentInput(inputBufferRef.current);
           setShowSuggestions(inputBufferRef.current.length > 0);
+          updateCursorPosition();
         } else if (data === '\x1b' || data.startsWith('\x1b[')) {
           // ESC 或方向键：隐藏建议
           setShowSuggestions(false);
@@ -302,6 +319,7 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
           inputBufferRef.current += data;
           setCurrentInput(inputBufferRef.current);
           setShowSuggestions(inputBufferRef.current.length > 0);
+          updateCursorPosition();
         } else if (data === '\x03') {
           // Ctrl+C：清空
           inputBufferRef.current = '';
@@ -611,7 +629,7 @@ function Terminal({ tabId, hostId, isActive, onConnectionChange, onShowCommandPa
       <CommandSuggestions
         input={currentInput}
         visible={showSuggestions && isActive && connectionId}
-        position={{ bottom: 60, left: 16 }}
+        cursorPosition={cursorPosition}
         onSelect={handleSuggestionSelect}
         onClose={handleCloseSuggestions}
       />
